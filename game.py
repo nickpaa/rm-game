@@ -23,36 +23,12 @@ class Game():
         df = pd.DataFrame(data).set_index('dfd')
         return df
 
-    # def run_game(self):
-    #     print()
-    #     print('--- THE PRM GAME ---')
-    #     for i in range(self.ndfd, -1, -1):
-    #         self.curr_dfd = i
-    #         self.sim_dfd(self.curr_dfd)
-    #     self.summarize_game()
-
-    # def sim_dfd(self, dfd):
-        
-    #     d = DFDSimulation(self, dfd)
-
-    #     d.run_dfd()
-
-    #     if dfd > 0:
-    #         input(f'Your total revenue so far is ${self.totalrev:,}.')
-        
-    #     self.fc.drop(dfd, axis=0, inplace=True)
-
-    # def summarize_game(self):
-    #     lf = int((1 - self.sa / self.AC) * 100)
-    #     print()
-    #     print(f'The flight has departed. You earned ${self.totalrev:,} and your load factor was {lf}%.')
-    #     print()
-
 
 class EasyGame(Game):
 
     def __init__(self, ndfd, data, ac):
         Game.__init__(self, ndfd, data, ac)
+        self.game_type = 'Easy mode'
         self.easy_mode = True
         self.fc['stdev'] = 0
 
@@ -61,6 +37,7 @@ class RealGame(Game):
 
     def __init__(self, ndfd, data, ac):
         Game.__init__(self, ndfd, data, ac)
+        self.game_type = 'Real life mode'
         self.easy_mode = False
 
 
@@ -92,6 +69,7 @@ class Disruption():
         self.name = None
         self.explanation = None
 
+
 class FareIncrease(Disruption):
     def __init__(self):
         self.name = 'Fare increase disruption'
@@ -99,9 +77,3 @@ class FareIncrease(Disruption):
 
     def apply(self):
         pass
-
-
-# if __name__ == '__main__':
-#     g = EasyGame(dflt_dfd, dflt_fcdata, dflt_ac)
-#     g.run_game()
-
