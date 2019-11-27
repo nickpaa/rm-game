@@ -76,7 +76,6 @@ class DFDSimulation():
         self.fare = game.fc.loc[dfd, 'fare']
         self.demand = game.fc.loc[dfd, 'demand']
         self.stdev = game.fc.loc[dfd, 'stdev']
-        print('Creating DFDSimulation')
 
 
     # def run_dfd(self):
@@ -92,6 +91,13 @@ class DFDSimulation():
         print(f'{self.arr} people showed up to book today, and you reserved {self.rsv} seats.')
         self.rev = self.lb * self.fare
         print(f'You sold {self.lb} seats for ${self.rev:,} in revenue.')
+
+        self.game.totalrev += self.rev
+        self.game.sa -= self.lb
+
+    def dfd_cleanup(self):
+        self.game.fc.drop(self.dfd, axis=0, inplace=True)
+        self.game.curr_dfd -= 1
 
 
 class Disruption():
