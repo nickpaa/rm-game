@@ -1,9 +1,12 @@
+import random
 import tkinter as tk
 from tkinter import font, messagebox
-from PIL import ImageTk, Image
-import random
-from game import EasyGame, RealGame, DFDSimulation
+
+from PIL import Image, ImageTk
+
 from data import EASY_AC, EASY_DFD, EASY_FCDATA
+from game import DFDSimulation, EasyGame, RealGame
+
 
 class GUI():
     
@@ -14,14 +17,12 @@ class GUI():
         self.root.rowconfigure(0, weight=1)
         self.root.columnconfigure(0, weight=1)
 
-        self.build_home_page()
+        self.build_home()
 
 
-    def build_home_page(self):
+    def build_home(self):
         # create the main container
         self.home = tk.Frame(self.root)
-
-        # layout for the main container
         self.home.grid(column=0, row=0)
 
         # create widgets
@@ -33,10 +34,12 @@ class GUI():
 
         ### sign-in fields
         self.player_name_label = tk.Label(self.home, text='What\'s your name?')
-        self.player_name = tk.Entry(self.home)
+        self.player_name_value = tk.StringVar()
+        self.player_name = tk.Entry(self.home, textvariable=self.player_name_value)
 
         self.player_loc_label = tk.Label(self.home, text='Where are you from?')
-        self.player_loc = tk.Entry(self.home)
+        self.player_loc_value = tk.StringVar()
+        self.player_loc = tk.Entry(self.home, textvariable=self.player_loc_value)
 
         ### buttons
         self.easy_button_path = 'images/100.png'
@@ -68,87 +71,27 @@ class GUI():
         self.real_button.grid(row=2, column=2, padx=20, pady=20)
 
 
-    def play_easy_mode(self):
-        self.home.destroy()
-        self.game = EasyGame(EASY_DFD, EASY_FCDATA, EASY_AC)
-        self.build_main()
-
-
-    def build_main(self):
+    def build_game(self):
         ### MAIN CONTAINERS
         
         self.main = tk.Frame(self.root)
         self.main.grid(column=0, row=0)
 
-        ### CREATE CORE WIDGETS
-        
         self.intro_message = tk.Label(self.main, text='EASY MODE')
-
-        # tracking labels and icons
-        self.date_label = tk.Label(self.main, text=f'Today is DFD {self.game.curr_dfd}')
-        self.sa_label = tk.Label(self.main, text=f'There are {self.game.sa} seats remaining.')
-        self.rev_label = tk.Label(self.main, text=f'So far, your flight\'s revenue is ${self.game.totalrev:,}.')
-
-        self.date_image = ImageTk.PhotoImage(Image.open('images/calendar.png'))
-        self.date_image_label = tk.Label(self.main, image=self.date_image)
-        self.date_image_label.image = self.date_image
-
-        self.seat_image = ImageTk.PhotoImage(Image.open('images/seat.png'))
-        self.seat_image_label = tk.Label(self.main, image=self.seat_image)
-        self.seat_image_label.image = self.seat_image
-        
-        self.money_image = ImageTk.PhotoImage(Image.open('images/money.png'))
-        self.money_image_label = tk.Label(self.main, image=self.money_image)
-        self.money_image_label.image = self.money_image
-        
-        # forecast headers
-        self.lb_frame = tk.Frame(self.main, relief='sunken', borderwidth=2)
-        self.lb_label = tk.Label(self.main, text='--- FORECAST ---')
-        self.lb_label_1 = tk.Label(self.lb_frame, text='DFD')
-        self.lb_label_2 = tk.Label(self.lb_frame, text='Fare')
-        self.lb_label_3 = tk.Label(self.lb_frame, text='Demand')
-
-        # quit button
-        self.quit_button = tk.Button(self.main, text='Quit game', fg='red', command=self.quit_game)
-        
-        ### PLACE CORE WIDGETS
-        
         self.intro_message.grid(row=0, column=0)
-        
-        # tracking labels and icons
-        self.date_image_label.grid(row=1, column=0)
-        self.date_label.grid(row=1, column=1)
-        
-        self.seat_image_label.grid(row=2, column=0)
-        self.sa_label.grid(row=2, column=1)
-        
-        self.money_image_label.grid(row=3, column=0)
-        self.rev_label.grid(row=3, column=1)
 
-        # forecast headers
-        self.lb_frame.grid(row=1, column=2, rowspan=3)
-        self.lb_label.grid(row=0, column=2)
-        self.lb_label_1.grid(row=0, column=2, padx=5, pady=2)  # DFD
-        self.lb_label_2.grid(row=0, column=3, padx=5, pady=2)  # fare
-        self.lb_label_3.grid(row=0, column=4, padx=5, pady=2)  # demand
-
-        # quit button
+        self.quit_button = tk.Button(self.main, text='Quit game', fg='red', command=self.quit_game)
         self.quit_button.grid(row=0, column=5)
+
+        self.display_stats()
+
+        self.display_forecast()
 
         ### kick off dfd simulations
 
-        # loop through each dfd, place widgets, and play self.game
-        # for i, dfd in enumerate(range(self.game.ndfd, -1, -1)):
-
         ### Create DFDSimulation
         self.dfdsim = DFDSimulation(self.game, self.game.curr_dfd)
-
-        # create and place forecast values
-        for i, dfd in enumerate(range(self.game.curr_dfd, -1, -1)):
-            tk.Label(self.lb_frame, text=dfd).grid(row=i+1, column=2)
-            tk.Label(self.lb_frame, text=self.game.fc.loc[dfd, 'fare']).grid(row=i+1, column=3)
-            tk.Label(self.lb_frame, text=self.game.fc.loc[dfd, 'demand']).grid(row=i+1, column=4)
-
+        
         # create and place player entries
         if self.game.curr_dfd > 0:
             self.rsv_label = tk.Label(self.main, text=f'How many seats would you \nlike to reserve at ${self.game.fc.loc[self.game.curr_dfd, "fare"]}?')
@@ -173,6 +116,100 @@ class GUI():
         self.rsv_entry.bind('<Return>', self.run_dfd)
         self.check_button.bind('<Button-1>', self.run_dfd)
 
+
+    def build_end(self):
+        self.main = tk.Frame(self.root)
+        self.main.grid(column=0, row=0)
+
+        self.intro_message = tk.Label(self.main, text='EASY MODE')
+        self.intro_message.grid(row=0, column=0)
+
+        self.display_stats()
+        self.display_leaderboard()
+
+        self.quit_button = tk.Button(self.main, text='Quit game', fg='red', command=self.quit_game)
+        self.quit_button.grid(row=0, column=5)
+
+    
+    def display_stats(self):        
+        # tracking labels and icons
+        if self.game.curr_dfd >= 0:
+            self.date_label = tk.Label(self.main, text=f'Today is DFD {self.game.curr_dfd}')
+            self.sa_label = tk.Label(self.main, text=f'There are {self.game.sa} seats remaining.')
+            self.rev_label = tk.Label(self.main, text=f'So far, your flight\'s revenue is ${self.game.totalrev:,}.')
+        else:
+            self.date_label = tk.Label(self.main, text=f'The flight has departed!')
+            self.sa_label = tk.Label(self.main, text=f'Your load factor is {int(100 * (1 - self.game.sa / self.game.AC))}%.')
+            self.rev_label = tk.Label(self.main, text=f'You earned a total of ${self.game.totalrev:,}.')
+
+        self.date_image = ImageTk.PhotoImage(Image.open('images/calendar.png'))
+        self.date_image_label = tk.Label(self.main, image=self.date_image)
+        self.date_image_label.image = self.date_image
+
+        self.seat_image = ImageTk.PhotoImage(Image.open('images/seat.png'))
+        self.seat_image_label = tk.Label(self.main, image=self.seat_image)
+        self.seat_image_label.image = self.seat_image
+        
+        self.money_image = ImageTk.PhotoImage(Image.open('images/money.png'))
+        self.money_image_label = tk.Label(self.main, image=self.money_image)
+        self.money_image_label.image = self.money_image
+
+        # tracking labels and icons
+        self.date_image_label.grid(row=1, column=0)
+        self.date_label.grid(row=1, column=1)
+        
+        self.seat_image_label.grid(row=2, column=0)
+        self.sa_label.grid(row=2, column=1)
+        
+        self.money_image_label.grid(row=3, column=0)
+        self.rev_label.grid(row=3, column=1)
+
+
+    def display_forecast(self):
+        # create widgets for headers
+        self.lb_frame = tk.Frame(self.main, relief='sunken', borderwidth=2)
+        self.lb_label = tk.Label(self.main, text='--- FORECAST ---')
+        self.lb_label_1 = tk.Label(self.lb_frame, text='DFD')
+        self.lb_label_2 = tk.Label(self.lb_frame, text='Fare')
+        self.lb_label_3 = tk.Label(self.lb_frame, text='Demand')
+
+        # place widgets for headers
+        self.lb_frame.grid(row=1, column=2, rowspan=3)
+        self.lb_label.grid(row=0, column=2)
+        self.lb_label_1.grid(row=0, column=2, padx=5, pady=2)  # DFD
+        self.lb_label_2.grid(row=0, column=3, padx=5, pady=2)  # fare
+        self.lb_label_3.grid(row=0, column=4, padx=5, pady=2)  # demand
+
+        # create and place forecast values
+        for i, dfd in enumerate(range(self.game.curr_dfd, -1, -1)):
+            tk.Label(self.lb_frame, text=dfd).grid(row=i+1, column=2)
+            tk.Label(self.lb_frame, text=self.game.fc.loc[dfd, 'fare']).grid(row=i+1, column=3)
+            tk.Label(self.lb_frame, text=self.game.fc.loc[dfd, 'demand']).grid(row=i+1, column=4)
+
+
+    def display_leaderboard(self):
+        # create widgets for headers
+        self.lb_frame = tk.Frame(self.main, relief='sunken', borderwidth=2)
+        self.lb_label = tk.Label(self.main, text='--- LEADERBOARD ---')
+        self.lb_label_1 = tk.Label(self.lb_frame, text='Name')
+        self.lb_label_2 = tk.Label(self.lb_frame, text='From')
+        self.lb_label_3 = tk.Label(self.lb_frame, text='Game')
+        self.lb_label_4 = tk.Label(self.lb_frame, text='Revenue')
+
+        # place widgets for headers
+        self.lb_frame.grid(row=1, column=2, rowspan=3)
+        self.lb_label.grid(row=0, column=2)
+        self.lb_label_1.grid(row=0, column=2, padx=5, pady=2)  # name
+        self.lb_label_2.grid(row=0, column=3, padx=5, pady=2)  # from
+        self.lb_label_3.grid(row=0, column=4, padx=5, pady=2)  # game
+        self.lb_label_4.grid(row=0, column=5, padx=5, pady=2)  # revenue
+
+        # create and place leaderboard values
+        tk.Label(self.lb_frame, text=self.player_name_value.get()).grid(row=1, column=2)
+        tk.Label(self.lb_frame, text=self.player_loc_value.get()).grid(row=1, column=3)
+        tk.Label(self.lb_frame, text=self.game.game_type).grid(row=1, column=4)
+        tk.Label(self.lb_frame, text=f'${self.game.totalrev:,}').grid(row=1, column=5)
+        
     
     def run_dfd(self, event):
         self.rsv = int(self.rsv_entry.get())  # TODO: validate this somehow
@@ -186,7 +223,7 @@ class GUI():
 
         self.outcome_label = tk.Label(self.main, 
             text=f'{self.dfdsim.arr} people showed up to book today, \nand you reserved {self.rsv} seats. \
-\n\nYou sold {self.dfdsim.lb} seats and earned ${self.dfdsim.rev:,}.')
+        \n\nYou sold {self.dfdsim.lb} seats and earned ${self.dfdsim.rev:,}.')
         self.outcome_label.grid(row=2, column=3)
 
         # if dfd > 0, go to next dfd
@@ -207,86 +244,27 @@ class GUI():
     def go_to_next_dfd(self):
         self.dfdsim.dfd_cleanup()
         self.main.destroy()
-        self.build_main()
+        self.build_game()
 
 
     def end_game(self):
         self.dfdsim.dfd_cleanup()
         self.main.destroy()
-        self.build_end_in_gui()
+        self.build_end()
 
 
     def quit_game(self):
         quit = tk.messagebox.askyesno('Quit?', 'Do you really want to quit the game?')
         if quit:
             self.main.destroy()
-            self.build_home_page()
+            self.build_home()
 
 
-    def build_end_in_gui(self):
-        ### MAIN CONTAINERS
-        
-        self.main = tk.Frame(self.root)
-        self.main.grid(column=0, row=0)
-
-        ### CREATE CORE WIDGETS
-        
-        self.intro_message = tk.Label(self.main, text='EASY MODE')
-
-        # tracking labels and icons
-        self.date_label = tk.Label(self.main, text=f'The flight has departed!')
-        self.sa_label = tk.Label(self.main, text=f'Your load factor is {int(100 * (1 - self.game.sa / self.game.AC))}%.')
-        self.rev_label = tk.Label(self.main, text=f'You earned a total of ${self.game.totalrev:,}.')
-
-        self.date_image = ImageTk.PhotoImage(Image.open('images/calendar.png'))
-        self.date_image_label = tk.Label(self.main, image=self.date_image)
-        self.date_image_label.image = self.date_image
-
-        self.seat_image = ImageTk.PhotoImage(Image.open('images/seat.png'))
-        self.seat_image_label = tk.Label(self.main, image=self.seat_image)
-        self.seat_image_label.image = self.seat_image
-        
-        self.money_image = ImageTk.PhotoImage(Image.open('images/money.png'))
-        self.money_image_label = tk.Label(self.main, image=self.money_image)
-        self.money_image_label.image = self.money_image
-        
-        # leaderboard headers
-        self.lb_frame = tk.Frame(self.main, relief='sunken', borderwidth=2)
-        self.lb_label = tk.Label(self.main, text='--- LEADERBOARD ---')
-        self.lb_label_1 = tk.Label(self.lb_frame, text='Name')
-        self.lb_label_2 = tk.Label(self.lb_frame, text='From')
-        self.lb_label_3 = tk.Label(self.lb_frame, text='Game')
-        self.lb_label_4 = tk.Label(self.lb_frame, text='Revenue')
-
-        # quit button
-        self.quit_button = tk.Button(self.main, text='Quit game', fg='red', command=self.quit_game)
-        
-        ### PLACE CORE WIDGETS
-        
-        self.intro_message.grid(row=0, column=0)
-        
-        # tracking labels and icons
-        self.date_image_label.grid(row=1, column=0)
-        self.date_label.grid(row=1, column=1)
-        
-        self.seat_image_label.grid(row=2, column=0)
-        self.sa_label.grid(row=2, column=1)
-        
-        self.money_image_label.grid(row=3, column=0)
-        self.rev_label.grid(row=3, column=1)
-
-        # leaderboard headers
-        self.lb_frame.grid(row=1, column=2, rowspan=3)
-        self.lb_label.grid(row=0, column=2)
-        self.lb_label_1.grid(row=0, column=2, padx=5, pady=2)  # name
-        self.lb_label_2.grid(row=0, column=3, padx=5, pady=2)  # from
-        self.lb_label_3.grid(row=0, column=4, padx=5, pady=2)  # game
-        self.lb_label_4.grid(row=0, column=5, padx=5, pady=2)  # revenue
-
-        # quit button
-        self.quit_button.grid(row=0, column=5)
+    def play_easy_mode(self):
+        self.home.destroy()
+        self.game = EasyGame(EASY_DFD, EASY_FCDATA, EASY_AC)
+        self.build_game()
 
 
     def play_real_mode(self):
         self.home.destroy()
-    
