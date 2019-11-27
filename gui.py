@@ -71,10 +71,10 @@ class GUI():
     def play_easy_mode(self):
         self.home.destroy()
         self.game = EasyGame(EASY_DFD, EASY_FCDATA, EASY_AC)
-        self.build_dfd_in_gui()
+        self.build_main()
 
 
-    def build_dfd_in_gui(self):
+    def build_main(self):
         ### MAIN CONTAINERS
         
         self.main = tk.Frame(self.root)
@@ -164,21 +164,23 @@ class GUI():
         self.rsv_entry.grid(row=1, column=4)
 
         self.check_image = ImageTk.PhotoImage(Image.open('images/check.png'))
-        self.check_image_button = tk.Button(self.main, image=self.check_image)
-        self.check_image_button.image = self.check_image
+        self.check_button = tk.Button(self.main, image=self.check_image)
+        self.check_button.image = self.check_image
 
-        self.check_image_button.grid(row=1, column=5)
+        self.check_button.grid(row=1, column=5)
 
         # store entered value as self.rsv upon Enter or mouse click and then simulated the dfd
         self.rsv_entry.bind('<Return>', self.run_dfd)
-        self.check_image_button.bind('<Button-1>', self.run_dfd)
+        self.check_button.bind('<Button-1>', self.run_dfd)
 
-            
     
     def run_dfd(self, event):
         self.rsv = int(self.rsv_entry.get())  # TODO: validate this somehow
         if (self.rsv < 0) or (self.rsv > self.game.sa):
             print('error')
+
+        self.rsv_entry['state'] = 'disabled'
+        self.check_button['state'] = 'disabled'
         
         self.dfdsim.observe_bookings(self.rsv)
 
@@ -205,7 +207,7 @@ class GUI():
     def go_to_next_dfd(self):
         self.dfdsim.dfd_cleanup()
         self.main.destroy()
-        self.build_dfd_in_gui()
+        self.build_main()
 
 
     def end_game(self):
