@@ -1,10 +1,13 @@
 import random
 import tkinter as tk
+from datetime import datetime
 from tkinter import font, messagebox
 
+import pandas as pd
 from PIL import Image, ImageTk
 
 from data import EASY_AC, EASY_DFD, EASY_FCDATA
+from db import create_connection, db_file, insert_results
 from game import DFDSimulation, EasyGame, RealGame
 
 
@@ -22,7 +25,7 @@ class GUI():
 
     def build_home(self):
         # create the main container
-        self.home = tk.Frame(self.root)
+        self.home = tk.Frame(self.root, padx=100, pady=100, relief='sunken', borderwidth=5)
         self.home.grid(column=0, row=0)
 
         # create widgets
@@ -56,29 +59,35 @@ class GUI():
         # place widgets
 
         ### logo
-        self.logo.grid(row=0, column=0, rowspan=3)
+        self.logo.grid(row=0, column=0, rowspan=4)
 
         ### sign-in fields
         # TODO: validate that user fields are filled in before selecting game
-        self.player_name_label.grid(row=0, column=1, padx=20, pady=2, sticky=tk.W)
-        self.player_name.grid(row=0, column=2)
+        self.player_name_label.grid(row=1, column=1, padx=20, pady=2, sticky=tk.W)
+        self.player_name.grid(row=1, column=2)
 
-        self.player_loc_label.grid(row=1, column=1, padx=20, pady=2, sticky=tk.W)
-        self.player_loc.grid(row=1, column=2)
+        self.player_loc_label.grid(row=2, column=1, padx=20, pady=2, sticky=tk.W)
+        self.player_loc.grid(row=2, column=2)
 
         ### buttons
-        self.easy_button.grid(row=2, column=1, padx=20, pady=20)
-        self.real_button.grid(row=2, column=2, padx=20, pady=20)
+        self.easy_button.grid(row=3, column=1, padx=20, pady=20)
+        self.real_button.grid(row=3, column=2, padx=20, pady=20)
 
 
     def build_game(self):
         ### MAIN CONTAINERS
         
-        self.main = tk.Frame(self.root)
+        self.main = tk.Frame(self.root, padx=100, pady=100, relief='sunken', borderwidth=5)
         self.main.grid(column=0, row=0)
 
-        self.intro_message = tk.Label(self.main, text='EASY MODE')
-        self.intro_message.grid(row=0, column=0)
+        self.stats_frame = tk.Frame(self.main, padx=50, pady=20, relief='groove', borderwidth=5, bg='white')
+        self.stats_frame.grid(row=0, column=0)
+
+        self.fc_frame = tk.Frame(self.main, padx=50, pady=20, relief='groove', borderwidth=5, bg='white')
+        self.fc_frame.grid(row=0, column=1, sticky='N S')
+
+        self.intro_message = tk.Label(self.stats_frame, text='EASY MODE')
+        self.intro_message.grid(row=0, column=0, padx=5, pady=5, columnspan=2)
 
         self.quit_button = tk.Button(self.main, text='Quit game', fg='red', command=self.quit_game)
         self.quit_button.grid(row=0, column=5)
@@ -97,6 +106,7 @@ class GUI():
             self.rsv_label = tk.Label(self.main, text=f'How many seats would you \nlike to reserve at ${self.game.fc.loc[self.game.curr_dfd, "fare"]}?')
         else:
             self.rsv_label = tk.Label(self.main, text=f'Today is the last day, so you should \nreserve all remaining seats at ${self.game.fc.loc[self.game.curr_dfd, "fare"]}.')
+        
         self.rsv_value = tk.StringVar()
         self.rsv_entry = tk.Entry(self.main, width=10, textvariable=self.rsv_value)
 
@@ -113,110 +123,18 @@ class GUI():
         self.check_button.grid(row=1, column=5)
 
         # store entered value as self.rsv upon Enter or mouse click and then simulated the dfd
-        self.rsv_entry.bind('<Return>', self.run_dfd)
-        self.check_button.bind('<Button-1>', self.run_dfd)
+        self.rsv_entry_funcid = self.rsv_entry.bind('<Return>', self.run_dfd)
+        self.check_button_funcid =self.check_button.bind('<Button-1>', self.run_dfd)
 
 
-    def build_end(self):
-        self.main = tk.Frame(self.root)
-        self.main.grid(column=0, row=0)
-
-        self.intro_message = tk.Label(self.main, text='EASY MODE')
-        self.intro_message.grid(row=0, column=0)
-
-        self.display_stats()
-        self.display_leaderboard()
-
-        self.quit_button = tk.Button(self.main, text='Quit game', fg='red', command=self.quit_game)
-        self.quit_button.grid(row=0, column=5)
-
-    
-    def display_stats(self):        
-        # tracking labels and icons
-        if self.game.curr_dfd >= 0:
-            self.date_label = tk.Label(self.main, text=f'Today is DFD {self.game.curr_dfd}')
-            self.sa_label = tk.Label(self.main, text=f'There are {self.game.sa} seats remaining.')
-            self.rev_label = tk.Label(self.main, text=f'So far, your flight\'s revenue is ${self.game.totalrev:,}.')
-        else:
-            self.date_label = tk.Label(self.main, text=f'The flight has departed!')
-            self.sa_label = tk.Label(self.main, text=f'Your load factor is {int(100 * (1 - self.game.sa / self.game.AC))}%.')
-            self.rev_label = tk.Label(self.main, text=f'You earned a total of ${self.game.totalrev:,}.')
-
-        self.date_image = ImageTk.PhotoImage(Image.open('images/calendar.png'))
-        self.date_image_label = tk.Label(self.main, image=self.date_image)
-        self.date_image_label.image = self.date_image
-
-        self.seat_image = ImageTk.PhotoImage(Image.open('images/seat.png'))
-        self.seat_image_label = tk.Label(self.main, image=self.seat_image)
-        self.seat_image_label.image = self.seat_image
-        
-        self.money_image = ImageTk.PhotoImage(Image.open('images/money.png'))
-        self.money_image_label = tk.Label(self.main, image=self.money_image)
-        self.money_image_label.image = self.money_image
-
-        # tracking labels and icons
-        self.date_image_label.grid(row=1, column=0)
-        self.date_label.grid(row=1, column=1)
-        
-        self.seat_image_label.grid(row=2, column=0)
-        self.sa_label.grid(row=2, column=1)
-        
-        self.money_image_label.grid(row=3, column=0)
-        self.rev_label.grid(row=3, column=1)
-
-
-    def display_forecast(self):
-        # create widgets for headers
-        self.lb_frame = tk.Frame(self.main, relief='sunken', borderwidth=2)
-        self.lb_label = tk.Label(self.main, text='--- FORECAST ---')
-        self.lb_label_1 = tk.Label(self.lb_frame, text='DFD')
-        self.lb_label_2 = tk.Label(self.lb_frame, text='Fare')
-        self.lb_label_3 = tk.Label(self.lb_frame, text='Demand')
-
-        # place widgets for headers
-        self.lb_frame.grid(row=1, column=2, rowspan=3)
-        self.lb_label.grid(row=0, column=2)
-        self.lb_label_1.grid(row=0, column=2, padx=5, pady=2)  # DFD
-        self.lb_label_2.grid(row=0, column=3, padx=5, pady=2)  # fare
-        self.lb_label_3.grid(row=0, column=4, padx=5, pady=2)  # demand
-
-        # create and place forecast values
-        for i, dfd in enumerate(range(self.game.curr_dfd, -1, -1)):
-            tk.Label(self.lb_frame, text=dfd).grid(row=i+1, column=2)
-            tk.Label(self.lb_frame, text=self.game.fc.loc[dfd, 'fare']).grid(row=i+1, column=3)
-            tk.Label(self.lb_frame, text=self.game.fc.loc[dfd, 'demand']).grid(row=i+1, column=4)
-
-
-    def display_leaderboard(self):
-        # create widgets for headers
-        self.lb_frame = tk.Frame(self.main, relief='sunken', borderwidth=2)
-        self.lb_label = tk.Label(self.main, text='--- LEADERBOARD ---')
-        self.lb_label_1 = tk.Label(self.lb_frame, text='Name')
-        self.lb_label_2 = tk.Label(self.lb_frame, text='From')
-        self.lb_label_3 = tk.Label(self.lb_frame, text='Game')
-        self.lb_label_4 = tk.Label(self.lb_frame, text='Revenue')
-
-        # place widgets for headers
-        self.lb_frame.grid(row=1, column=2, rowspan=3)
-        self.lb_label.grid(row=0, column=2)
-        self.lb_label_1.grid(row=0, column=2, padx=5, pady=2)  # name
-        self.lb_label_2.grid(row=0, column=3, padx=5, pady=2)  # from
-        self.lb_label_3.grid(row=0, column=4, padx=5, pady=2)  # game
-        self.lb_label_4.grid(row=0, column=5, padx=5, pady=2)  # revenue
-
-        # create and place leaderboard values
-        tk.Label(self.lb_frame, text=self.player_name_value.get()).grid(row=1, column=2)
-        tk.Label(self.lb_frame, text=self.player_loc_value.get()).grid(row=1, column=3)
-        tk.Label(self.lb_frame, text=self.game.game_type).grid(row=1, column=4)
-        tk.Label(self.lb_frame, text=f'${self.game.totalrev:,}').grid(row=1, column=5)
-        
-    
-    def run_dfd(self, event):
+    def run_dfd(self, event=None):
         self.rsv = int(self.rsv_entry.get())  # TODO: validate this somehow
         if (self.rsv < 0) or (self.rsv > self.game.sa):
             print('error')
 
+        self.rsv_entry.unbind('<Return>', self.rsv_entry_funcid)
         self.rsv_entry['state'] = 'disabled'
+        self.check_button.unbind('Button-1>', self.check_button_funcid)
         self.check_button['state'] = 'disabled'
         
         self.dfdsim.observe_bookings(self.rsv)
@@ -237,7 +155,6 @@ class GUI():
                 bg='white', command=self.end_game)
 
         self.next_image_button.image = self.next_image
-
         self.next_image_button.grid(row=4, column=3)
         
 
@@ -250,7 +167,155 @@ class GUI():
     def end_game(self):
         self.dfdsim.dfd_cleanup()
         self.main.destroy()
+        self.add_results_to_db()
         self.build_end()
+
+
+    def add_results_to_db(self):
+        result = (self.player_name_value.get(),
+            self.player_loc_value.get(),
+            self.game.game_type,
+            self.game.totalrev,
+            datetime.now().isoformat()
+            )
+        conn = create_connection(db_file)
+        insert_results(conn, result)
+        conn.close()
+
+
+    def build_end(self):
+        self.main = tk.Frame(self.root)
+        self.main.grid(column=0, row=0)
+
+        self.intro_message = tk.Label(self.main, text='EASY MODE')
+        self.intro_message.grid(row=0, column=0)
+
+        self.display_stats()
+        self.display_leaderboard()
+
+        self.return_to_home_button = tk.Button(self.main, text='Main menu', fg='red', command=self.return_to_home)
+        self.return_to_home_button.grid(row=0, column=5)
+
+    
+    def display_stats(self):        
+        # tracking labels and icons
+        if self.game.curr_dfd >= 0:
+            self.date_label = tk.Label(self.stats_frame, text=f'Today is DFD {self.game.curr_dfd}')
+            self.sa_label = tk.Label(self.stats_frame, text=f'There are {self.game.sa} seats remaining.')
+            self.rev_label = tk.Label(self.stats_frame, text=f'So far, your flight\'s revenue is ${self.game.totalrev:,}.')
+        else:
+            self.date_label = tk.Label(self.stats_frame, text=f'The flight has departed!')
+            self.sa_label = tk.Label(self.stats_frame, text=f'Your load factor is {int(100 * (1 - self.game.sa / self.game.AC))}%.')
+            self.rev_label = tk.Label(self.stats_frame, text=f'You earned a total of ${self.game.totalrev:,}.')
+
+        self.date_image = ImageTk.PhotoImage(Image.open('images/calendar.png'))
+        self.date_image_label = tk.Label(self.stats_frame, image=self.date_image)
+        self.date_image_label.image = self.date_image
+
+        self.seat_image = ImageTk.PhotoImage(Image.open('images/seat.png'))
+        self.seat_image_label = tk.Label(self.stats_frame, image=self.seat_image)
+        self.seat_image_label.image = self.seat_image
+        
+        self.money_image = ImageTk.PhotoImage(Image.open('images/money.png'))
+        self.money_image_label = tk.Label(self.stats_frame, image=self.money_image)
+        self.money_image_label.image = self.money_image
+
+        # tracking labels and icons
+        self.date_image_label.grid(row=1, column=0, padx=10, pady=10)
+        self.date_label.grid(row=1, column=1, padx=5, pady=10)
+        
+        self.seat_image_label.grid(row=2, column=0, padx=10, pady=10)
+        self.sa_label.grid(row=2, column=1, padx=5, pady=10)
+        
+        self.money_image_label.grid(row=3, column=0, padx=10, pady=10)
+        self.rev_label.grid(row=3, column=1, padx=5, pady=10)
+
+
+    def display_forecast(self):
+        # create widgets for headers
+        # self.fc_frame = tk.Frame(self.main, relief='sunken', borderwidth=2)
+        self.fc_label = tk.Label(self.fc_frame, text='--- FORECAST ---')
+        self.fc_label_1 = tk.Label(self.fc_frame, text='DFD')
+        self.fc_label_2 = tk.Label(self.fc_frame, text='Fare')
+        self.fc_label_3 = tk.Label(self.fc_frame, text='Demand')
+
+        # place widgets for headers
+        # self.fc_frame.grid(row=1, column=2, rowspan=3, sticky=tk.N)
+        self.fc_label.grid(row=0, column=0, padx=5, pady=10, columnspan=3)
+        self.fc_label_1.grid(row=1, column=0, padx=5, pady=10)  # DFD
+        self.fc_label_2.grid(row=1, column=1, padx=5, pady=10)  # fare
+        self.fc_label_3.grid(row=1, column=2, padx=5, pady=10)  # demand
+
+        # create and place forecast values
+        for i, dfd in enumerate(range(self.game.curr_dfd, -1, -1)):
+            tk.Label(self.fc_frame, text=dfd).grid(row=i+2, column=0)
+            tk.Label(self.fc_frame, text=self.game.fc.loc[dfd, 'fare']).grid(row=i+2, column=1, padx=5, pady=10)
+            tk.Label(self.fc_frame, text=self.game.fc.loc[dfd, 'demand']).grid(row=i+2, column=2, padx=5, pady=10)
+
+
+    def get_results(self):
+        easy_query = """
+        select * 
+        from results 
+        where game = 'Easy mode' 
+        order by revenue desc, gametime desc;
+        """
+
+        real_query = """
+        select * 
+        from results 
+        where game <> 'Easy mode' 
+        order by revenue desc, gametime desc;
+        """
+
+        conn = create_connection(db_file)
+        if self.game.easy_mode:
+            self.results_df = pd.read_sql_query(easy_query, conn)
+        else:
+            self.results_df = pd.read_sql_query(real_query, conn)
+        conn.close()
+
+
+    def display_leaderboard(self):
+        self.get_results()
+
+        # create widgets for headers
+        self.lb_frame = tk.Frame(self.main, relief='sunken', borderwidth=2)
+        self.lb_label = tk.Label(self.main, text='--- LEADERBOARD ---')
+        self.lb_label_1 = tk.Label(self.lb_frame, text='Name')
+        self.lb_label_2 = tk.Label(self.lb_frame, text='From')
+        self.lb_label_3 = tk.Label(self.lb_frame, text='Game')
+        self.lb_label_4 = tk.Label(self.lb_frame, text='Revenue')
+
+        # place widgets for headers
+        self.lb_frame.grid(row=1, column=2, rowspan=3)
+        self.lb_label.grid(row=0, column=2)
+        self.lb_label_1.grid(row=0, column=2, padx=5, pady=2)  # name
+        self.lb_label_2.grid(row=0, column=3, padx=5, pady=2)  # from
+        self.lb_label_3.grid(row=0, column=4, padx=5, pady=2)  # game
+        self.lb_label_4.grid(row=0, column=5, padx=5, pady=2)  # revenue
+
+        # create and place leaderboard values
+        player_on_leaderboard = False
+
+        for i in range(5):
+            if (self.results_df.loc[i, 'revenue'] > self.game.totalrev) or player_on_leaderboard:
+                tk.Label(self.lb_frame, text=self.results_df.loc[i, 'name']).grid(row=i+1, column=2)
+                tk.Label(self.lb_frame, text=self.results_df.loc[i, 'location']).grid(row=i+1, column=3)
+                tk.Label(self.lb_frame, text=self.results_df.loc[i, 'game']).grid(row=i+1, column=4)
+                tk.Label(self.lb_frame, text=f'${self.results_df.loc[i, "revenue"]:,}').grid(row=i+1, column=5)
+            else:
+                player_on_leaderboard = True
+                tk.Label(self.lb_frame, text=self.player_name_value.get()).grid(row=i+1, column=2)
+                tk.Label(self.lb_frame, text=self.player_loc_value.get()).grid(row=i+1, column=3)
+                tk.Label(self.lb_frame, text=self.game.game_type).grid(row=i+1, column=4)
+                tk.Label(self.lb_frame, text=f'${self.game.totalrev:,}').grid(row=i+1, column=5)
+        
+        if not player_on_leaderboard:
+            tk.Label(self.lb_frame, text=self.player_name_value.get()).grid(row=i+2, column=2)
+            tk.Label(self.lb_frame, text=self.player_loc_value.get()).grid(row=i+2, column=3)
+            tk.Label(self.lb_frame, text=self.game.game_type).grid(row=i+2, column=4)
+            tk.Label(self.lb_frame, text=f'${self.game.totalrev:,}').grid(row=i+2, column=5)
 
 
     def quit_game(self):
@@ -260,11 +325,19 @@ class GUI():
             self.build_home()
 
 
+    def return_to_home(self):
+        go_home = tk.messagebox.askyesno('Main menu?', 'Ready to go back to the main menu?')
+        if go_home:
+            self.main.destroy()
+            self.build_home()
+
+
     def play_easy_mode(self):
         self.home.destroy()
         self.game = EasyGame(EASY_DFD, EASY_FCDATA, EASY_AC)
+        self.game.set_player_info(self.player_name_value.get(), self.player_loc_value.get())
         self.build_game()
 
 
     def play_real_mode(self):
-        self.home.destroy()
+        pass

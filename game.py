@@ -12,6 +12,8 @@ class Game():
         # data: dict
         # ac: int
 
+        self.player = None
+        self.location = None
         self.ndfd = int(ndfd)
         self.fc = self.create_forecast(data)
         self.AC = int(ac)
@@ -22,6 +24,10 @@ class Game():
     def create_forecast(self, data):
         df = pd.DataFrame(data).set_index('dfd')
         return df
+
+    def set_player_info(self, player=None, location=None):
+        self.player = player
+        self.location = location
 
 
 class EasyGame(Game):
