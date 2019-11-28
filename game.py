@@ -20,6 +20,8 @@ class Game():
         self.sa = ac
         self.totalrev = 0
         self.curr_dfd = int(ndfd)
+        self.curr_dow_long = self.fc.loc[self.curr_dfd, 'dow_long']
+        self.curr_dow_short = self.fc.loc[self.curr_dfd, 'dow_short']
 
     def create_forecast(self, data):
         df = pd.DataFrame(data).set_index('dfd')
@@ -41,9 +43,10 @@ class EasyGame(Game):
 
 class RealGame(Game):
 
-    def __init__(self, ndfd, data, ac):
+    def __init__(self, ndfd, data, ac, flight=None):
         Game.__init__(self, ndfd, data, ac)
         self.game_type = 'Real life mode'
+        self.game_flight = flight
         self.easy_mode = False
 
 
@@ -68,6 +71,9 @@ class DFDSimulation():
     def dfd_cleanup(self):
         self.game.fc.drop(self.dfd, axis=0, inplace=True)
         self.game.curr_dfd -= 1
+        if self.game.curr_dfd >= 0:
+            self.game.curr_dow_long = self.game.fc.loc[self.game.curr_dfd, 'dow_long']
+            self.game.curr_dow_short = self.game.fc.loc[self.game.curr_dfd, 'dow_short']
 
 
 class Disruption():
