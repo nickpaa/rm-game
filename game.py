@@ -1,31 +1,28 @@
-import pandas as pd
+from pandas import DataFrame
 import random
 from scipy.stats import norm
 
 
 class Game():
 
-    def __init__(self, ndfd, data, ac):
+    def __init__(self, scenario):
 
-        # easy_mode: bool
-        # ndfd: int
-        # data: dict
-        # ac: int
+        self.ndfd = scenario.ndfd
+        self.fc = scenario.fc
+        self.ac = scenario.ac
+
+        # self.ndfd = int(ndfd)
+        # self.fc = self.create_forecast(data)
+        # self.AC = int(ac)        
 
         self.player = None
         self.location = None
-        self.ndfd = int(ndfd)
-        self.fc = self.create_forecast(data)
-        self.AC = int(ac)
-        self.sa = ac
+
+        self.sa = scenario.ac
         self.totalrev = 0
-        self.curr_dfd = int(ndfd)
+        self.curr_dfd = int(scenario.ndfd)
         self.curr_dow_long = self.fc.loc[self.curr_dfd, 'dow_long']
         self.curr_dow_short = self.fc.loc[self.curr_dfd, 'dow_short']
-
-    def create_forecast(self, data):
-        df = pd.DataFrame(data).set_index('dfd')
-        return df
 
     def set_player_info(self, player=None, location=None):
         self.player = player
@@ -34,8 +31,8 @@ class Game():
 
 class EasyGame(Game):
 
-    def __init__(self, ndfd, data, ac):
-        Game.__init__(self, ndfd, data, ac)
+    def __init__(self, scenario):
+        Game.__init__(self, scenario)
         self.game_type = 'Easy mode'
         self.easy_mode = True
         self.fc['stdev'] = 0
@@ -43,10 +40,9 @@ class EasyGame(Game):
 
 class RealGame(Game):
 
-    def __init__(self, ndfd, data, ac, flight=None):
-        Game.__init__(self, ndfd, data, ac)
+    def __init__(self, scenario):
+        Game.__init__(self, scenario)
         self.game_type = 'Real life mode'
-        self.game_flight = flight
         self.easy_mode = False
 
 
