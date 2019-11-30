@@ -21,6 +21,7 @@ REAL1_FCDATA = {
 REAL1_AC = 100
 REAL1_NSRATE = 0.02
 
+
 class Scenario():
     
     def __init__(self, fcdata, ac):

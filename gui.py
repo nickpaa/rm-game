@@ -169,6 +169,10 @@ class GUI():
         self.fc_frame = tk.Frame(self.main, padx=10, pady=20, relief='groove', borderwidth=5, bg='white')
         self.fc_frame.grid(row=0, column=1, padx=10, sticky='N S')
 
+        # if not self.overbooking_set:
+        #     self.overbook_frame = tk.Frame(self.main, padx=10, pady=20, relief='groove', borderwidth=5, bg='white')
+        #     self.overbook_frame.grid(row=0, column=2, padx=10, sticky='N S E')
+        # else:
         self.reserve_frame = tk.Frame(self.main, padx=10, pady=20, relief='groove', borderwidth=5, bg='white')
         self.reserve_frame.grid(row=0, column=2, padx=10, sticky='N S E')
 
@@ -190,11 +194,11 @@ class GUI():
         if self.game.curr_dfd >= 0:
             self.date_label = tk.Label(self.stats_frame, text=f'Today is {self.game.curr_dow_long}, and\nthe flight departs on Friday.')
             self.sa_label = tk.Label(self.stats_frame, text=f'There are {self.game.sa} seats remaining.')
-            self.rev_label = tk.Label(self.stats_frame, text=f'So far, you\'ve earned\n${self.game.totalrev:,}.')
+            self.rev_label = tk.Label(self.stats_frame, text=f'So far, you\'ve earned\n${self.game.total_rev:,}.')
         else:
             self.date_label = tk.Label(self.stats_frame, text=f'The flight has departed!')
-            self.sa_label = tk.Label(self.stats_frame, text=f'Your load factor is {int(100 * (1 - self.game.sa / self.game.ac))}%.')
-            self.rev_label = tk.Label(self.stats_frame, text=f'You earned a total of ${self.game.totalrev:,}.')
+            self.sa_label = tk.Label(self.stats_frame, text=f'Your load factor is {int(100 * (self.game.total_lb))}%.')
+            self.rev_label = tk.Label(self.stats_frame, text=f'You earned a total of ${self.game.total_rev:,}.')
 
         self.date_image = ImageTk.PhotoImage(Image.open('images/calendar.png'))
         self.date_image_label = tk.Label(self.stats_frame, image=self.date_image)
@@ -280,7 +284,9 @@ class GUI():
     # TODO: finish overbooking display
 
     # def display_overbook_frame(self):
-    #     ob_msg = f'We know that, on average {0.02 * 100}% people will no-show for the flight.'
+
+
+    #     ob_msg = f'We know that, on average {self.game.nsrate * 100}% of customers will not show up for the flight.'
     #     self.ob_label = tk.Label(self.overbook_frame, text=ob_msg)
     #     self.ob_value = tk.StringVar()
     #     self.ob_entry = tk.Entry(self.overbook_frame, width=10, textvariable=self.ob_value)
@@ -398,7 +404,7 @@ class GUI():
         result = (self.player_name_value.get(),
             self.player_loc_value.get(),
             self.game.game_type,
-            self.game.totalrev,
+            self.game.total_rev,
             datetime.now().isoformat()
             )
         conn = create_connection(db_file)
@@ -476,10 +482,10 @@ class GUI():
             tk.Label(self.lb_frame, text=self.game.player).grid(row=i+2, column=0, padx=5, pady=10)
             tk.Label(self.lb_frame, text=self.game.location).grid(row=i+2, column=1, padx=5, pady=10)
             tk.Label(self.lb_frame, text=self.game.game_type).grid(row=i+2, column=2, padx=5, pady=10)
-            tk.Label(self.lb_frame, text=f'${self.game.totalrev:,}').grid(row=i+2, column=3, padx=5, pady=10)
+            tk.Label(self.lb_frame, text=f'${self.game.total_rev:,}').grid(row=i+2, column=3, padx=5, pady=10)
 
         for i in range(min(5, len(self.results_df))):
-            if (self.results_df.loc[i, 'revenue'] > self.game.totalrev) or player_on_leaderboard:
+            if (self.results_df.loc[i, 'revenue'] > self.game.total_rev) or player_on_leaderboard:
                 tk.Label(self.lb_frame, text=self.results_df.loc[i, 'name']).grid(row=i+2, column=0, padx=5, pady=10)
                 tk.Label(self.lb_frame, text=self.results_df.loc[i, 'location']).grid(row=i+2, column=1, padx=5, pady=10)
                 tk.Label(self.lb_frame, text=self.results_df.loc[i, 'game']).grid(row=i+2, column=2, padx=5, pady=10)

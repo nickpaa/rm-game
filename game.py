@@ -1,6 +1,5 @@
 from pandas import DataFrame
-import random
-from scipy.stats import norm
+from scipy.stats import norm, binom
 
 
 class Game():
@@ -10,6 +9,7 @@ class Game():
         self.ndfd = scenario.ndfd
         self.fc = scenario.fc
         self.ac = scenario.ac
+        self.au = scenario.ac  # start by initializing AU to AC
 
         # self.ndfd = int(ndfd)
         # self.fc = self.create_forecast(data)
@@ -19,7 +19,8 @@ class Game():
         self.location = None
 
         self.sa = scenario.ac
-        self.totalrev = 0
+        self.total_lb = 0
+        self.total_rev = 0
         self.curr_dfd = int(scenario.ndfd)
         self.curr_dow_long = self.fc.loc[self.curr_dfd, 'dow_long']
         self.curr_dow_short = self.fc.loc[self.curr_dfd, 'dow_short']
@@ -44,6 +45,10 @@ class RealGame(Game):
         Game.__init__(self, scenario)
         self.game_type = 'Real life mode'
         self.easy_mode = False
+        self.nsrate = scenario.nsrate
+
+    def simulate_noshows(self):
+        return binom.rvs(n=self.total_lb, p=self.nsrate)
 
 
 class DFDSimulation():
@@ -61,7 +66,8 @@ class DFDSimulation():
         self.lb = min(self.arr, self.rsv)
         self.rev = self.lb * self.fare
 
-        self.game.totalrev += self.rev
+        self.game.total_rev += self.rev
+        self.game.total_lb += self.lb
         self.game.sa -= self.lb
 
     def dfd_cleanup(self):
@@ -71,17 +77,3 @@ class DFDSimulation():
             self.game.curr_dow_long = self.game.fc.loc[self.game.curr_dfd, 'dow_long']
             self.game.curr_dow_short = self.game.fc.loc[self.game.curr_dfd, 'dow_short']
 
-
-class Disruption():
-    def __init__(self, game):
-        self.name = None
-        self.explanation = None
-
-
-class FareIncrease(Disruption):
-    def __init__(self):
-        self.name = 'Fare increase disruption'
-        self.explanation = 'Increases all future fares by a random amount'
-
-    def apply(self):
-        pass
