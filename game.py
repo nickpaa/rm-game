@@ -1,31 +1,31 @@
-import pandas as pd
-import random
-from scipy.stats import norm
+from pandas import DataFrame
+from scipy.stats import norm, binom
+from random import choices
 
 
 class Game():
 
-    def __init__(self, ndfd, data, ac):
+    def __init__(self, scenario):
 
-        # easy_mode: bool
-        # ndfd: int
-        # data: dict
-        # ac: int
+        self.ndfd = scenario.ndfd
+        self.fc = scenario.fc
+        self.ac = scenario.ac
+        self.au = scenario.ac  # start by initializing AU to AC
+
+        # self.ndfd = int(ndfd)
+        # self.fc = self.create_forecast(data)
+        # self.AC = int(ac)        
 
         self.player = None
         self.location = None
-        self.ndfd = int(ndfd)
-        self.fc = self.create_forecast(data)
-        self.AC = int(ac)
-        self.sa = ac
-        self.totalrev = 0
-        self.curr_dfd = int(ndfd)
+
+        self.au = scenario.ac
+        self.sa = self.au
+        self.total_lb = 0
+        self.total_rev = 0
+        self.curr_dfd = int(scenario.ndfd)
         self.curr_dow_long = self.fc.loc[self.curr_dfd, 'dow_long']
         self.curr_dow_short = self.fc.loc[self.curr_dfd, 'dow_short']
-
-    def create_forecast(self, data):
-        df = pd.DataFrame(data).set_index('dfd')
-        return df
 
     def set_player_info(self, player=None, location=None):
         self.player = player
@@ -34,8 +34,8 @@ class Game():
 
 class EasyGame(Game):
 
-    def __init__(self, ndfd, data, ac):
-        Game.__init__(self, ndfd, data, ac)
+    def __init__(self, scenario):
+        Game.__init__(self, scenario)
         self.game_type = 'Easy mode'
         self.easy_mode = True
         self.fc['stdev'] = 0
@@ -43,11 +43,18 @@ class EasyGame(Game):
 
 class RealGame(Game):
 
-    def __init__(self, ndfd, data, ac, flight=None):
-        Game.__init__(self, ndfd, data, ac)
+    def __init__(self, scenario):
+        Game.__init__(self, scenario)
         self.game_type = 'Real life mode'
-        self.game_flight = flight
         self.easy_mode = False
+        self.ns_rate = scenario.ns_rate
+        self.db_costs = scenario.db_costs
+
+    def simulate_noshows(self):
+        return binom.rvs(n=self.total_lb, p=self.ns_rate)
+
+    def compensate_dbs(self):
+        return choices(self.db_costs['costs'], weights=self.db_costs['weights'])[0]
 
 
 class DFDSimulation():
@@ -65,7 +72,8 @@ class DFDSimulation():
         self.lb = min(self.arr, self.rsv)
         self.rev = self.lb * self.fare
 
-        self.game.totalrev += self.rev
+        self.game.total_rev += self.rev
+        self.game.total_lb += self.lb
         self.game.sa -= self.lb
 
     def dfd_cleanup(self):
@@ -75,17 +83,3 @@ class DFDSimulation():
             self.game.curr_dow_long = self.game.fc.loc[self.game.curr_dfd, 'dow_long']
             self.game.curr_dow_short = self.game.fc.loc[self.game.curr_dfd, 'dow_short']
 
-
-class Disruption():
-    def __init__(self, game):
-        self.name = None
-        self.explanation = None
-
-
-class FareIncrease(Disruption):
-    def __init__(self):
-        self.name = 'Fare increase disruption'
-        self.explanation = 'Increases all future fares by a random amount'
-
-    def apply(self):
-        pass
