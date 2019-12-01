@@ -18,7 +18,8 @@ class Game():
         self.player = None
         self.location = None
 
-        self.sa = scenario.ac
+        self.au = scenario.ac
+        self.sa = self.au
         self.total_lb = 0
         self.total_rev = 0
         self.curr_dfd = int(scenario.ndfd)

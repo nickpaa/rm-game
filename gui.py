@@ -22,10 +22,12 @@ class GUI():
         self.root.columnconfigure(0, weight=1)
 
         self.default_font = nametofont('TkDefaultFont')
-        self.default_font.configure(family='Helvetica', size='14')
+        self.default_font.configure(family='Helvetica', size='12')
 
         self.entry_font = nametofont('TkTextFont')
-        self.entry_font.configure(family='Helvetica', size='14')
+        self.entry_font.configure(family='Helvetica', size='12')
+
+        self.game_started = False
 
         self.build_home()
 
@@ -142,6 +144,7 @@ class GUI():
     def play_easy_mode(self):
         self.home.destroy()
         self.game = EasyGame(sc_easy)
+        self.game_started = True
         self.game.set_player_info(self.player_name_value.get(), self.player_loc_value.get())
         self.build_game()
 
@@ -169,62 +172,104 @@ class GUI():
         self.fc_frame = tk.Frame(self.main, padx=10, pady=20, relief='groove', borderwidth=5, bg='white')
         self.fc_frame.grid(row=0, column=1, padx=10, sticky='N S')
 
-        # if not self.overbooking_set:
-        #     self.overbook_frame = tk.Frame(self.main, padx=10, pady=20, relief='groove', borderwidth=5, bg='white')
-        #     self.overbook_frame.grid(row=0, column=2, padx=10, sticky='N S E')
-        # else:
-        self.reserve_frame = tk.Frame(self.main, padx=10, pady=20, relief='groove', borderwidth=5, bg='white')
-        self.reserve_frame.grid(row=0, column=2, padx=10, sticky='N S E')
+        if not self.game_started:
+            self.overbook_frame = tk.Frame(self.main, padx=10, pady=20, relief='groove', borderwidth=5, bg='white')
+            self.overbook_frame.grid(row=0, column=2, padx=10, sticky='N S E')
+        else:
+            self.reserve_frame = tk.Frame(self.main, padx=10, pady=20, relief='groove', borderwidth=5, bg='white')
+            self.reserve_frame.grid(row=0, column=2, padx=10, sticky='N S E')
 
         self.option_frame = tk.Frame(self.main, padx=10, pady=20, relief='groove', borderwidth=5, bg='white')
         self.option_frame.grid(row=1, column=2, padx=10, pady=(50, 0), sticky='S E')
 
         self.display_stats_frame()
         self.display_forecast_frame()
-        self.display_reserve_frame()
+        if not self.game_started:
+            self.display_overbook_frame()
+        else:
+            self.display_reserve_frame()
         self.display_option_frame()
 
         self.dfdsim = DFDSimulation(self.game, self.game.curr_dfd)
 
 
-    def display_stats_frame(self):        
-        # create widgets
+    def display_stats_frame(self):
+        
+        ### IMAGES
+        
         self.intro_message = tk.Label(self.stats_frame, text=self.game.game_type)
-
-        if self.game.curr_dfd >= 0:
-            self.date_label = tk.Label(self.stats_frame, text=f'Today is {self.game.curr_dow_long}, and\nthe flight departs on Friday.')
-            self.sa_label = tk.Label(self.stats_frame, text=f'There are {self.game.sa} seats remaining.')
-            self.rev_label = tk.Label(self.stats_frame, text=f'So far, you\'ve earned\n${self.game.total_rev:,}.')
-        else:
-            self.date_label = tk.Label(self.stats_frame, text=f'The flight has departed!')
-            self.sa_label = tk.Label(self.stats_frame, text=f'Your load factor is {int(100 * (self.game.total_lb))}%.')
-            self.rev_label = tk.Label(self.stats_frame, text=f'You earned a total of ${self.game.total_rev:,}.')
+        self.intro_message.grid(row=0, column=0, padx=5, pady=(5, 10), sticky = 'N S W')
 
         self.date_image = ImageTk.PhotoImage(Image.open('images/calendar.png'))
         self.date_image_label = tk.Label(self.stats_frame, image=self.date_image)
         self.date_image_label.image = self.date_image
+        self.date_image_label.grid(row=1, column=0, pady=10, sticky = 'N S')
 
         self.seat_image = ImageTk.PhotoImage(Image.open('images/seat.png'))
         self.seat_image_label = tk.Label(self.stats_frame, image=self.seat_image)
         self.seat_image_label.image = self.seat_image
+        self.seat_image_label.grid(row=2, column=0, pady=10, sticky = 'N S')
         
         self.money_image = ImageTk.PhotoImage(Image.open('images/money.png'))
         self.money_image_label = tk.Label(self.stats_frame, image=self.money_image)
         self.money_image_label.image = self.money_image
-
-        # place widgets
-        self.intro_message.grid(row=0, column=0, padx=5, pady=(5, 10), sticky = 'N S W')
-
-        self.date_image_label.grid(row=1, column=0, pady=10, sticky = 'N S')
-        self.date_label.grid(row=1, column=1, padx=5, pady=10, sticky = 'N S')
-        
-        self.seat_image_label.grid(row=2, column=0, pady=10, sticky = 'N S')
-        self.sa_label.grid(row=2, column=1, padx=5, pady=10, sticky = 'N S')
-        
         self.money_image_label.grid(row=3, column=0, pady=10, sticky = 'N S')
-        self.rev_label.grid(row=3, column=1, padx=5, pady=(10, 0), sticky = 'N S')
+
+        ### date frame and values
+
+        self.date_frame = tk.Frame(self.stats_frame)
+        self.date_frame.grid(row=1, column=1, sticky='E W')
+
+        self.today_label = tk.Label(self.date_frame, text=f'Today:')
+        self.today_value = tk.Label(self.date_frame, text=f'{self.game.curr_dow_long}')
+        self.dep_label = tk.Label(self.date_frame, text=f'Departure:')
+        self.dep_value = tk.Label(self.date_frame, text=f'Friday')
+
+        self.today_label.grid(row=0, column=0, sticky='W')
+        self.today_value.grid(row=0, column=1)
+        self.dep_label.grid(row=1, column=0, sticky='W')
+        self.dep_value.grid(row=1, column=1)
+
+        ### seat frame and values
+
+        self.seat_frame = tk.Frame(self.stats_frame)
+        self.seat_frame.grid(row=2, column=1, sticky='E W')
+
+        self.ac_label = tk.Label(self.seat_frame, text=f'Aircraft capacity:')
+        self.ac_value = tk.Label(self.seat_frame, text=f'{self.game.ac}')
+        if not self.game.easy_mode:
+            self.au_label = tk.Label(self.seat_frame, text=f'With overbooking:')
+            self.au_value = tk.Label(self.seat_frame, text=f'{self.game.au}')
+        self.lb_label = tk.Label(self.seat_frame, text=f'Seats sold:')
+        self.lb_value = tk.Label(self.seat_frame, text=f'{self.game.total_lb}')
+        self.sa_label = tk.Label(self.seat_frame, text=f'Remaining seats:')
+        self.sa_value = tk.Label(self.seat_frame, text=f'{self.game.sa}')
+
+        self.ac_label.grid(row=0, column=0, sticky='W')
+        self.ac_value.grid(row=0, column=1)
+        if not self.game.easy_mode:
+            self.au_label.grid(row=1, column=0, sticky='W')
+            self.au_value.grid(row=1, column=1)
+        self.lb_label.grid(row=2, column=0, sticky='W')
+        self.lb_value.grid(row=2, column=1)
+        self.sa_label.grid(row=3, column=0, sticky='W')
+        self.sa_value.grid(row=3, column=1)
+
+        ### revenue frame and values
+
+        self.rev_frame = tk.Frame(self.stats_frame)
+        self.rev_frame.grid(row=3, column=1, sticky='E W')
+
+        self.rev_label = tk.Label(self.rev_frame, text=f'Revenue:')
+        self.rev_value = tk.Label(self.rev_frame, text=f'${self.game.total_rev:,}')
+
+        self.rev_label.grid(row=0, column=0)
+        self.rev_value.grid(row=0, column=1)
 
         self.change_bg_to_white(self.stats_frame)
+        self.change_bg_to_white(self.date_frame)
+        self.change_bg_to_white(self.seat_frame)
+        self.change_bg_to_white(self.rev_frame)
 
 
     def display_forecast_frame(self):
@@ -267,7 +312,7 @@ class GUI():
             tk.Label(self.fc_frame, text='     ').grid(row=i+3, column=3, padx=(5, 10), pady=10)
 
         # create and place demand total labels
-        tk.Label(self.fc_frame, text='Total demand', font='Helvetica 14 bold').grid(row=i+4, column=0, pady=10, columnspan=2)
+        tk.Label(self.fc_frame, text='Remaining demand', font='Helvetica 14 bold').grid(row=i+4, column=0, pady=10, columnspan=2)
         tk.Label(self.fc_frame, text=self.game.fc['demand'].sum(), font='Helvetica 14 bold').grid(row=i+4, column=2, pady=10)
 
         self.change_bg_to_white(self.fc_frame)
@@ -281,15 +326,59 @@ class GUI():
         else:
             return 'high'
 
-    # TODO: finish overbooking display
 
-    # def display_overbook_frame(self):
+    def display_overbook_frame(self):
+        ob_msg = f'We know that, on average, {int(self.game.nsrate * 100)}%\nof customers will not show up\nfor the flight, so we might overbook.\nHow many seats would you\nlike to overbook by?'
+        
+        self.ob_label = tk.Label(self.overbook_frame, text=ob_msg)
+        self.ob_value = tk.StringVar()
+        self.ob_entry = tk.Entry(self.overbook_frame, width=10, textvariable=self.ob_value)
+
+        self.check_image = ImageTk.PhotoImage(Image.open('images/check.png'))
+        self.check_button = tk.Button(self.overbook_frame, image=self.check_image)
+        self.check_button.image = self.check_image
+
+        self.ob_label.grid(row=1, column=0, padx=5, pady=10)
+        self.ob_entry.grid(row=1, column=1, padx=5, pady=10)
+        self.check_button.grid(row=1, column=2, padx=5, pady=10)
+
+        self.ob_entry_funcid = self.ob_entry.bind('<Return>', self.apply_overbooking)
+        self.check_button_funcid =self.check_button.bind('<Button-1>', self.apply_overbooking)
+
+        self.ob_entry.focus_set()
+
+        self.change_bg_to_white(self.overbook_frame)
 
 
-    #     ob_msg = f'We know that, on average {self.game.nsrate * 100}% of customers will not show up for the flight.'
-    #     self.ob_label = tk.Label(self.overbook_frame, text=ob_msg)
-    #     self.ob_value = tk.StringVar()
-    #     self.ob_entry = tk.Entry(self.overbook_frame, width=10, textvariable=self.ob_value)
+    def apply_overbooking(self, event=None):
+        self.game.au = self.game.ac + int(self.ob_entry.get())
+        self.game.sa = self.game.au
+        self.game_started = True
+
+        self.ob_entry.unbind('<Return>', self.ob_entry_funcid)
+        self.ob_entry['state'] = 'disabled'
+        self.check_button.unbind('Button-1>', self.check_button_funcid)
+        self.check_button['state'] = 'disabled'
+        
+        self.new_au_label = tk.Label(self.overbook_frame, 
+            text=f'OK. You\'ll sell up to {self.game.au} seats. \nAt the end, we\'ll see how many people no-show.', padx=5, pady=5, bg='lightblue')
+        self.new_au_label.grid(row=2, column=0, columnspan=3, padx=5, pady=10)
+
+        self.next_image = ImageTk.PhotoImage(Image.open('images/next.png'))
+
+        next_button_text = 'Start selling'
+        next_command = self.build_game
+    
+        self.next_image_button = tk.Button(self.overbook_frame, text=next_button_text, image=self.next_image, compound='top', height=120, width=120, 
+                bg='white', command=self.confirm_overbooking)
+
+        self.next_image_button.image = self.next_image
+        self.next_image_button.grid(row=3, column=0, columnspan=3, sticky='S', pady=(20, 0))
+
+
+    def confirm_overbooking(self):
+        self.main.destroy()
+        self.build_game()
 
 
     def display_reserve_frame(self):
@@ -313,13 +402,35 @@ class GUI():
         self.rsv_entry.grid(row=1, column=1, padx=5, pady=10)
         self.check_button.grid(row=1, column=2, padx=5, pady=10)
 
-        # store entered value as self.rsv upon Enter or mouse click and then simulated the dfd
         self.rsv_entry_funcid = self.rsv_entry.bind('<Return>', self.run_dfd)
         self.check_button_funcid =self.check_button.bind('<Button-1>', self.run_dfd)
 
         self.rsv_entry.focus_set()
 
         self.change_bg_to_white(self.reserve_frame)
+
+
+    def build_display_departure_frame(self):
+        self.reserve_frame.destroy()
+
+        self.departure_frame = tk.Frame(self.main, padx=10, pady=20, relief='groove', borderwidth=5, bg='white')
+        self.departure_frame.grid(row=0, column=2, padx=10, sticky='N S E')
+
+        self.noshows = self.game.simulate_noshows()
+        people = (lambda x: 'person' if x == 1 else 'people') (self.noshows)
+
+        dep_msg = f'When the flight departed, {self.noshows} {people} no-showed.'
+        self.dep_label = tk.Label(self.departure_frame, text=dep_msg)
+        self.dep_label.grid(row=1, column=0, padx=5, pady=10)
+
+        self.next_image_button = tk.Button(self.departure_frame, text='See results', image=self.next_image, compound='top', height=120, width=120, 
+                bg='white', command=self.end_game)
+
+        self.next_image_button.image = self.next_image
+        self.next_image_button.grid(row=3, column=0, columnspan=3, sticky='S', pady=(20, 0))
+
+        self.change_bg_to_white(self.departure_frame)
+        
 
 
     def display_option_frame(self):
@@ -377,8 +488,12 @@ class GUI():
             next_button_text = 'Next day'
             next_command = self.go_to_next_dfd
         else:
-            next_button_text = 'See results'
-            next_command = self.end_game
+            if self.game.easy_mode:
+                next_button_text = 'See results'
+                next_command = self.end_game
+            else:
+                next_button_text = 'Flight departure'
+                next_command = self.build_display_departure_frame
         
         self.next_image_button = tk.Button(self.reserve_frame, text=next_button_text, image=self.next_image, compound='top', height=120, width=120, 
                 bg='white', command=next_command)
@@ -391,6 +506,12 @@ class GUI():
         self.dfdsim.dfd_cleanup()
         self.main.destroy()
         self.build_game()
+
+
+    def run_departure(self):
+        self.dfdsim.dfd_cleanup()
+        self.reserve_frame.destroy()
+        self.display_departure_frame()
 
 
     def end_game(self):
