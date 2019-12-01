@@ -1,5 +1,6 @@
 from pandas import DataFrame
 from scipy.stats import norm, binom
+from random import choices
 
 
 class Game():
@@ -46,10 +47,14 @@ class RealGame(Game):
         Game.__init__(self, scenario)
         self.game_type = 'Real life mode'
         self.easy_mode = False
-        self.nsrate = scenario.nsrate
+        self.ns_rate = scenario.ns_rate
+        self.db_costs = scenario.db_costs
 
     def simulate_noshows(self):
-        return binom.rvs(n=self.total_lb, p=self.nsrate)
+        return binom.rvs(n=self.total_lb, p=self.ns_rate)
+
+    def compensate_dbs(self):
+        return choices(self.db_costs['costs'], weights=self.db_costs['weights'])[0]
 
 
 class DFDSimulation():
