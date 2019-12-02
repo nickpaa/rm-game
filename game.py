@@ -27,6 +27,7 @@ class Game():
         self.curr_dow_long = self.fc.loc[self.curr_dfd, 'dow_long']
         self.curr_dow_short = self.fc.loc[self.curr_dfd, 'dow_short']
 
+
     def set_player_info(self, player=None, location=None):
         self.player = player
         self.location = location

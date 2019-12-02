@@ -38,15 +38,15 @@ class GUI():
         self.home = tk.Frame(self.root, padx=30, pady=30, relief='sunken', borderwidth=5)
         self.home.grid(column=0, row=0)
 
-        self.display_logo_frame()
-        self.display_player_frame()
-        self.display_button_frame()
+        self.build_logo_frame()
+        self.build_player_frame()
+        self.build_button_frame()
         
         # TODO: display leaderboard and admin options
-        # self.display_option_frame()
+        # self.build_option_frame()
 
 
-    def display_logo_frame(self):
+    def build_logo_frame(self):
         self.logo_frame = tk.Frame(self.home, padx=20, pady=20, relief='groove', borderwidth=5, bg='white')
         self.logo_frame.grid(row=0, column=0, padx=10, sticky='N S W', rowspan=3)
 
@@ -56,7 +56,7 @@ class GUI():
         self.logo.grid(row=0, column=0, rowspan=4)
 
 
-    def display_player_frame(self):
+    def build_player_frame(self):
         self.player_frame = tk.Frame(self.home, padx=20, pady=10, relief='groove', borderwidth=5, bg='white')
         self.player_frame.grid(row=0, column=1, sticky='N E W')
 
@@ -67,23 +67,23 @@ class GUI():
 
         self.player_name_label = tk.Label(self.player_frame, text='What\'s your name?', bg='white')
         self.player_name_value = tk.StringVar()
-        self.player_name = tk.Entry(self.player_frame, textvariable=self.player_name_value)
+        self.player_name_entry = tk.Entry(self.player_frame, textvariable=self.player_name_value)
         self.player_name_label.grid(row=0, column=0, padx=20, pady=10, sticky='N W')
-        self.player_name.grid(row=0, column=1, padx=20, pady=10, sticky='N E')
+        self.player_name_entry.grid(row=0, column=1, padx=20, pady=10, sticky='N E')
 
         self.player_loc_label = tk.Label(self.player_frame, text='Where are you from?', bg='white')
         self.player_loc_value = tk.StringVar()
-        self.player_loc = tk.Entry(self.player_frame, textvariable=self.player_loc_value)
+        self.player_loc_entry = tk.Entry(self.player_frame, textvariable=self.player_loc_value)
         self.player_loc_label.grid(row=1, column=0, padx=20, pady=10, sticky='S W')
-        self.player_loc.grid(row=1, column=1, padx=20, pady=10, sticky='S E')
+        self.player_loc_entry.grid(row=1, column=1, padx=20, pady=10, sticky='S E')
 
-        self.player_name.focus_set()
+        self.player_name_entry.focus_set()
+        self.player_name_entry.insert(0, 'Nick')
+        self.player_loc_entry.insert(0, 'ORD')
 
-        # TODO: validate that user fields are filled in before selecting game
 
-
-    def display_button_frame(self):
-        self.button_frame = tk.Frame(self.home, padx=20, pady=10, relief='groove', borderwidth=5, bg='white')
+    def build_button_frame(self):
+        self.button_frame = tk.Frame(self.home)
         self.button_frame.grid(row=1, column=1, sticky='W S E')
 
         self.top_row_button_frame = tk.Frame(self.button_frame, bg='white', relief='groove', borderwidth=5)
@@ -99,13 +99,11 @@ class GUI():
         self.real_button_path = 'images/' + choice(self.real_button_people) + '_shrugging.png'
         self.real_button_image = ImageTk.PhotoImage(Image.open(self.real_button_path))
         self.real_button = tk.Button(self.top_row_button_frame, text='Play real life mode', image=self.real_button_image, compound='top', height=160, width=240, bg='white', 
-            command=self.display_real_button_frame)
+            command=self.build_real_button_frame)
         self.real_button.grid(row=0, column=1, padx=20, pady=20)
 
 
-    def display_real_button_frame(self):
-        self.easy_button['state'] = 'disabled'
-
+    def build_real_button_frame(self):
         self.real_mode_button_frame = tk.Frame(self.button_frame, bg='white', relief='groove', borderwidth=5)
         self.real_mode_button_frame.grid(row=1, column=0, sticky='S E W')
         self.real_mode_button_frame.grid_rowconfigure(0, weight=1)
@@ -140,22 +138,25 @@ class GUI():
 
 
     def play_easy_mode(self):
-        self.home.destroy()
-        self.game = EasyGame(EasyScenario(scenario_dict[0]))
-        self.skip_ob = True
-        self.game.set_player_info(self.player_name_value.get(), self.player_loc_value.get())
-        self.build_game()
+        if (self.player_name_value.get() != '') and (self.player_loc_value.get() != ''):
+            self.home.destroy()
+            self.game = EasyGame(EasyScenario(scenario_dict[0]))
+            self.skip_ob = True
+            self.game.set_player_info(self.player_name_value.get(), self.player_loc_value.get())
+            self.build_game()
+        else:
+            tk.messagebox.showerror(title='Error', message=f'Please enter a player name and location before continuing.')
 
 
     def play_real_mode(self, which_game):
-        self.home.destroy()
-        self.game = RealGame(RealScenario(scenario_dict[which_game]))
-        self.skip_ob = False
-        self.game.set_player_info(self.player_name_value.get(), self.player_loc_value.get())
-        self.build_game()
-    
-    
-    ### GAME PAGE ###
+        if (self.player_name_value.get() != '') and (self.player_loc_value.get() != ''):
+            self.home.destroy()
+            self.game = RealGame(RealScenario(scenario_dict[which_game]))
+            self.skip_ob = False
+            self.game.set_player_info(self.player_name_value.get(), self.player_loc_value.get())
+            self.build_game()
+        else:
+            tk.messagebox.showerror(title='Error', message=f'Please enter a player name and location before continuing.')
 
 
     def build_game(self):
@@ -190,9 +191,38 @@ class GUI():
             self.build_overbook_frame()
         else:
             self.build_reserve_frame()
-        self.display_option_frame()
+        self.build_option_frame()
 
         self.dfdsim = DFDSimulation(self.game, self.game.curr_dfd)
+
+        self.change_bg_to_white(self.left_frame)
+        self.change_bg_to_white(self.middle_frame)
+        self.change_bg_to_white(self.right_frame)
+
+
+    def build_option_frame(self):
+        # check if parent is home or game
+        # if home, offer leaderboard and admin buttons
+        # if game, offer quit or main menu button
+        
+        self.return_to_home_button = tk.Button(self.option_frame, text='Main menu', fg='red', command=self.return_to_home)
+        self.return_to_home_button.grid(row=0, column=0)
+
+        self.change_bg_to_white(self.option_frame)
+
+
+    def return_to_home(self):
+        # if game still in progress, confirm they want to leave
+        if self.game.curr_dfd >= 0:
+            go_home = tk.messagebox.askyesno('Main menu?', 'Return to the main menu? Your progress will be lost.')
+            # if they confirm, go home
+            if go_home:
+                self.main.destroy()
+                self.build_home()
+        # if the game is over, just go home
+        else:
+            self.main.destroy()
+            self.build_home()
 
 
     def build_stats_frame(self):
@@ -328,6 +358,7 @@ class GUI():
         tk.Label(self.fc_value_frame, text='Remaining demand').grid(row=i+4, column=0, pady=10, columnspan=2)
         tk.Label(self.fc_value_frame, text=self.game.fc['demand'].sum()).grid(row=i+4, column=2, pady=10)
 
+        self.change_bg_to_white(self.fc_frame)
         self.change_bg_to_white(self.fc_value_frame)
 
 
@@ -346,7 +377,7 @@ class GUI():
         self.ob_frame.rowconfigure((0,1,2), weight=1)
         self.ob_frame.columnconfigure((0,1,2), weight=1)
 
-        ob_msg = f'We know that, on average, {int(self.game.ns_rate * 100)}%\nof customers will not show up\nfor the flight, so we might overbook.\nHow many seats would you\nlike to overbook by?'
+        ob_msg = f'We know that, on average, \n{int(self.game.ns_rate * 100)}% of customers will not show up\nfor the flight, so we might overbook.\nHow many seats would you\nlike to overbook by?'
         
         self.ob_label = tk.Label(self.ob_frame, text=ob_msg)
         self.ob_label.grid(row=0, column=0, padx=5, pady=10)
@@ -354,16 +385,27 @@ class GUI():
         self.ob_value = tk.StringVar()
         self.ob_entry = tk.Entry(self.ob_frame, width=10, textvariable=self.ob_value)
         self.ob_entry.grid(row=0, column=1, padx=5, pady=10)
-        self.ob_entry_funcid = self.ob_entry.bind('<Return>', self.apply_overbooking)
+        self.ob_entry_funcid = self.ob_entry.bind('<Return>', self.validate_overbooking)
         self.ob_entry.focus_set()
 
         self.check_image = ImageTk.PhotoImage(Image.open('images/check.png'))
         self.check_button = tk.Button(self.ob_frame, image=self.check_image)
         self.check_button.image = self.check_image
         self.check_button.grid(row=0, column=2, padx=5, pady=10)
-        self.check_button_funcid =self.check_button.bind('<Button-1>', self.apply_overbooking)
+        self.check_button_funcid =self.check_button.bind('<Button-1>', self.validate_overbooking)
 
         self.change_bg_to_white(self.ob_frame)
+
+
+    def validate_overbooking(self, event=None):
+        try:
+            ob = int(self.ob_value.get())
+            if ob >= 0:
+                self.apply_overbooking()  ## what goes here?
+            else:
+                tk.messagebox.showerror(title='Error', message=f'Oberbooking value must be an integer >= 0.')
+        except:
+            tk.messagebox.showerror(title='Error', message=f'Reserve value must be an integer >= 0.')
 
 
     def apply_overbooking(self, event=None):
@@ -411,10 +453,12 @@ class GUI():
         self.rsv_label = tk.Label(self.rsv_frame, text=rsv_msg)
         self.rsv_label.grid(row=0, column=0, padx=5, pady=10)
 
+        rsv_validation = self.rsv_frame.register(self.validate_reserve)
+
         self.rsv_value = tk.StringVar()
         self.rsv_entry = tk.Entry(self.rsv_frame, width=10, textvariable=self.rsv_value)
         self.rsv_entry.grid(row=0, column=1, padx=5, pady=10)
-        self.rsv_entry_funcid = self.rsv_entry.bind('<Return>', self.run_dfd)
+        self.rsv_entry_funcid = self.rsv_entry.bind('<Return>', self.validate_reserve)
         self.rsv_entry.focus_set()
         if self.game.curr_dfd == 0:
             self.rsv_entry.insert(0, self.game.sa)
@@ -423,107 +467,24 @@ class GUI():
         self.check_button = tk.Button(self.rsv_frame, image=self.check_image)
         self.check_button.image = self.check_image
         self.check_button.grid(row=0, column=2, padx=5, pady=10)
-        self.check_button_funcid =self.check_button.bind('<Button-1>', self.run_dfd)
+        self.check_button_funcid =self.check_button.bind('<Button-1>', self.validate_reserve)
 
         self.change_bg_to_white(self.rsv_frame)
 
 
-    def build_departure_frame(self):
-        self.dfdsim.dfd_cleanup()
-
-        self.stats_frame.destroy()
-        self.build_stats_frame()
-
-        # done with middle frame; leaderboard will go in right
-        self.middle_frame.destroy()
-
-        self.rsv_frame.destroy()
-
-        self.dep_frame = tk.Frame(self.right_frame)
-        self.dep_frame.grid(row=0, column=0, sticky='N S E W')
-        self.dep_frame.rowconfigure((0,1,2), weight=1)
-        self.dep_frame.columnconfigure(0, weight=1)
-
-        self.game.noshows = self.game.simulate_noshows()
-        self.game.total_lb -= self.game.noshows
-        self.game.dbs = max(0, self.game.total_lb - self.game.ac)
-
-        noshow_people = (lambda x: 'person' if x == 1 else 'people') (self.game.noshows)
-        db_people = (lambda x: 'person' if x == 1 else 'people') (self.game.dbs)
-        dep_msg = f'At departure, {self.game.noshows} {noshow_people} no-showed,\nso there are {self.game.total_lb} people\nfor {self.game.ac} seats.\n'
-        if self.game.dbs > 0:
-            dep_msg += f'\n\nYou\'ll need to offer\nDB compensation to {self.game.dbs} {db_people}.'
-        else:
-            dep_msg += 'No need for volunteers.'
-        self.dep_label = tk.Label(self.dep_frame, text=dep_msg, bg='lightblue')
-        self.dep_label.grid(row=0, column=0, padx=5, pady=10)
-
-        if self.game.dbs > 0:
-            next_text = 'Compensate DBs'
-            next_command = self.compensate_dbs
-        else:
-            next_text = 'See results'
-            next_command = self.end_game
-        self.next_image_button = tk.Button(self.dep_frame, text=next_text, image=self.next_image, compound='top', height=120, width=120, 
-                bg='white', command=next_command)
-        self.next_image_button.image = self.next_image
-        self.next_image_button.grid(row=2, column=0, pady=10)
-
-        self.change_bg_to_white(self.dep_frame)
-
-
-    def compensate_dbs(self):
-        self.game.db_cost = self.game.compensate_dbs()
-        self.game.total_db_cost = self.game.db_cost * self.game.dbs
-        self.game.total_rev -= self.game.total_db_cost
-
-        if self.game.db_cost <= 250:
-            self.db_comp_msg = f'You got lucky. There were\nplenty of other options,\nand you only paid ${self.game.db_cost:,}\nper denied boarding.'
-        elif self.game.db_cost <= 1000:
-            self.db_comp_msg = f'Could be worse. There were\nlimited alternative flights,\nand you paid ${self.game.db_cost:,}\nper denied boarding.'
-        else:
-            self.db_comp_msg = f'Ouch! No one was flexible\nwith their travel plans,\nand you had to pay ${self.game.db_cost:,}\nper denied boarding.'
-        self.db_outcome_label = tk.Label(self.dep_frame, text=self.db_comp_msg, padx=5, pady=5, bg='lightblue')
-        self.db_outcome_label.grid(row=1, column=0, padx=5, pady=10)
-
-        self.next_image_button = tk.Button(self.dep_frame, text='See results', image=self.next_image, compound='top', height=120, width=120, 
-                bg='white', command=self.end_game)
-        self.next_image_button.image = self.next_image
-        self.next_image_button.grid(row=2, column=0, pady=10)
-
-
-    def display_option_frame(self):
-        # check if parent is home or game
-        # if home, offer leaderboard and admin buttons
-        # if game, offer quit or main menu button
-        
-        self.return_to_home_button = tk.Button(self.option_frame, text='Main menu', fg='red', command=self.return_to_home)
-        self.return_to_home_button.grid(row=0, column=0)
-
-        self.change_bg_to_white(self.option_frame)
-
-
-    def return_to_home(self):
-        # if game still in progress, confirm they want to leave
-        if self.game.curr_dfd >= 0:
-            go_home = tk.messagebox.askyesno('Main menu?', 'Return to the main menu? Your progress will be lost.')
-            # if they confirm, go home
-            if go_home:
-                self.main.destroy()
-                self.build_home()
-        # if the game is over, just go home
-        else:
-            self.main.destroy()
-            self.build_home()
-
-
-    ### SIMULATE DFD ###
+    def validate_reserve(self, event=None):
+        try:
+            rsv = int(self.rsv_value.get())
+            if (rsv >= 0) and (rsv <= self.game.sa):
+                self.run_dfd()
+            else:
+                tk.messagebox.showerror(title='Error', message=f'Reserve value must be an integer between 0 and {self.game.sa}.')
+        except:
+            tk.messagebox.showerror(title='Error', message=f'Reserve value must be an integer between 0 and {self.game.sa}.')
 
 
     def run_dfd(self, event=None):
         self.rsv = int(self.rsv_entry.get())  # TODO: validate this somehow
-        if (self.rsv < 0) or (self.rsv > self.game.sa):
-            print('error')
 
         self.rsv_entry.unbind('<Return>', self.rsv_entry_funcid)
         self.rsv_entry['state'] = 'disabled'
@@ -568,10 +529,71 @@ class GUI():
         self.build_game()
 
 
-    def run_departure(self):
+    def build_departure_frame(self):
         self.dfdsim.dfd_cleanup()
-        self.reserve_frame.destroy()
-        self.display_departure_frame()
+
+        self.stats_frame.destroy()
+        self.build_stats_frame()
+
+        # done with middle frame; leaderboard will go in right
+        self.middle_frame.destroy()
+
+        self.rsv_frame.destroy()
+
+        self.dep_frame = tk.Frame(self.right_frame)
+        self.dep_frame.grid(row=0, column=0, sticky='N S E W')
+        self.dep_frame.rowconfigure((0,1,2), weight=1)
+        self.dep_frame.columnconfigure(0, weight=1)
+
+        self.game.noshows = self.game.simulate_noshows()
+        self.game.total_lb -= self.game.noshows
+        self.game.dbs = max(0, self.game.total_lb - self.game.ac)
+
+        noshow_people = (lambda x: 'person' if x == 1 else 'people') (self.game.noshows)
+        db_people = (lambda x: 'person' if x == 1 else 'people') (self.game.dbs)
+        dep_msg = f'At departure, {self.game.noshows} {noshow_people} no-showed,\nso there are {self.game.total_lb} people\nfor {self.game.ac} seats.\n'
+        if self.game.dbs > 0:
+            dep_msg += f'\n\nYou\'ll need to offer\nDB compensation to {self.game.dbs} {db_people}.'
+        else:
+            dep_msg += 'No need for volunteers.'
+        self.dep_label = tk.Label(self.dep_frame, text=dep_msg, bg='lightblue')
+        self.dep_label.grid(row=0, column=0, padx=5, pady=10)
+
+        if self.game.dbs > 0:
+            next_text = 'Compensate DBs'
+            next_command = self.compensate_dbs
+        else:
+            next_text = 'See results'
+            next_command = self.end_game
+        self.next_image_button = tk.Button(self.dep_frame, text=next_text, image=self.next_image, compound='top', height=120, width=120, 
+                bg='white', command=next_command)
+        self.next_image_button.image = self.next_image
+        self.next_image_button.grid(row=2, column=0, pady=10)
+
+        self.change_bg_to_white(self.left_frame)
+        self.change_bg_to_white(self.right_frame)
+        self.change_bg_to_white(self.stats_frame)
+        self.change_bg_to_white(self.dep_frame)
+
+
+    def compensate_dbs(self):
+        self.game.db_cost = self.game.compensate_dbs()
+        self.game.total_db_cost = self.game.db_cost * self.game.dbs
+        self.game.total_rev -= self.game.total_db_cost
+
+        if self.game.db_cost <= 250:
+            self.db_comp_msg = f'You got lucky. There were\nplenty of other options,\nand you only paid ${self.game.db_cost:,}\nper denied boarding.'
+        elif self.game.db_cost <= 1000:
+            self.db_comp_msg = f'There were limited\nalternative flights,\nand you paid ${self.game.db_cost:,}\nper denied boarding.'
+        else:
+            self.db_comp_msg = f'Ouch! No one was flexible\nwith their travel plans,\nand you had to pay ${self.game.db_cost:,}\nper denied boarding.'
+        self.db_outcome_label = tk.Label(self.dep_frame, text=self.db_comp_msg, padx=5, pady=5, bg='lightblue')
+        self.db_outcome_label.grid(row=1, column=0, padx=5, pady=10)
+
+        self.next_image_button = tk.Button(self.dep_frame, text='See results', image=self.next_image, compound='top', height=120, width=120, 
+                bg='white', command=self.end_game)
+        self.next_image_button.image = self.next_image
+        self.next_image_button.grid(row=2, column=0, pady=10)
 
 
     def end_game(self):
@@ -590,9 +612,6 @@ class GUI():
         conn = create_connection(db_file)
         insert_results(conn, result)
         conn.close()
-
-
-    ### END PAGE ###
 
 
     def build_end(self):
@@ -640,6 +659,12 @@ class GUI():
         self.rev_value = tk.Label(self.rev_frame, text=f'${self.game.total_rev:,}')
         self.rev_label.grid(row=0, column=0, sticky='W')
         self.rev_value.grid(row=0, column=1)
+
+        self.change_bg_to_white(self.left_frame)
+        self.change_bg_to_white(self.stats_frame)
+        self.change_bg_to_white(self.date_frame)
+        self.change_bg_to_white(self.seat_frame)
+        self.change_bg_to_white(self.rev_frame)
 
 
     def build_leaderboard_frame(self):
@@ -694,7 +719,9 @@ class GUI():
             i += 1
             add_this_player()
 
+        self.change_bg_to_white(self.right_frame)
         self.change_bg_to_white(self.lb_frame)
+        self.change_bg_to_white(self.lb_value_frame)
 
 
     def get_results(self):
@@ -722,9 +749,6 @@ class GUI():
         return df
 
 
-    ### HELPERS ###
-
-    
     def change_bg_to_white(self, parent):
         for widget in parent.winfo_children():
             widget.configure(bg='white')
