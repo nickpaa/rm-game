@@ -1,5 +1,5 @@
 from pandas import DataFrame
-from scipy.stats import norm, binom
+from scipy.stats import gamma, binom
 from random import choices
 
 
@@ -11,13 +11,6 @@ class Game():
         self.fc = scenario.fc
         self.ac = scenario.ac
         self.au = scenario.ac  # start by initializing AU to AC
-
-        # self.ndfd = int(ndfd)
-        # self.fc = self.create_forecast(data)
-        # self.AC = int(ac)        
-
-        self.player = None
-        self.location = None
 
         self.au = scenario.ac
         self.sa = self.au
@@ -69,7 +62,14 @@ class DFDSimulation():
 
     def observe_bookings(self, rsv):
         self.rsv = rsv
-        self.arr = int(norm.rvs(self.demand, self.stdev))
+
+        if self.game.easy_mode:
+            self.arr = self.demand
+        else:
+            a = (self.demand ** 2) / (self.stdev ** 2)
+            scale = (self.stdev ** 2) / self.demand
+            self.arr = int(gamma.rvs(a=a, scale=scale))
+        
         self.lb = min(self.arr, self.rsv)
         self.rev = self.lb * self.fare
 
