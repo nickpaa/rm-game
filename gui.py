@@ -185,7 +185,7 @@ class GUI():
         self.option_frame = tk.Frame(self.main, padx=10, pady=20, relief='groove', borderwidth=5, bg='white')
         self.option_frame.grid(row=1, column=2, padx=10, pady=(50, 0), sticky='S E')
 
-        self.build_stats_frame()
+        self.build_stats_frame(which='game')
         self.build_forecast_frame()
         if not self.skip_ob:
             self.build_overbook_frame()
@@ -224,8 +224,9 @@ class GUI():
             self.main.destroy()
             self.build_home()
 
-
-    def build_stats_frame(self):
+    
+    # builds stats frame and icons in left column
+    def build_stats_frame(self, which):
         self.stats_frame = tk.Frame(self.left_frame)
         self.stats_frame.grid(row=0, column=0, sticky='N S E W')
         self.stats_frame.rowconfigure((1,2,3), weight=1)
@@ -252,56 +253,77 @@ class GUI():
         self.money_image_label.grid(row=3, column=0, pady=10)
 
         ### date frame and values
-
         self.date_frame = tk.Frame(self.stats_frame)
         self.date_frame.grid(row=1, column=1, padx=5)
 
-        self.today_label = tk.Label(self.date_frame, text=f'Today:')
-        self.today_value = tk.Label(self.date_frame, text=f'{self.game.curr_dow_long}')
-        self.dep_label = tk.Label(self.date_frame, text=f'Departure:')
-        self.dep_value = tk.Label(self.date_frame, text=f'Friday')
-
-        self.today_label.grid(row=0, column=0, sticky='W')
-        self.today_value.grid(row=0, column=1)
-        self.dep_label.grid(row=1, column=0, sticky='W')
-        self.dep_value.grid(row=1, column=1)
+        if which == 'game':
+            self.today_label = tk.Label(self.date_frame, text=f'Today:')
+            self.today_value = tk.Label(self.date_frame, text=f'{self.game.curr_dow_long}')
+            self.today_label.grid(row=0, column=0, sticky='W')
+            self.today_value.grid(row=0, column=1)
+            self.dep_label = tk.Label(self.date_frame, text=f'Departure:')
+            self.dep_value = tk.Label(self.date_frame, text=f'Friday')
+            self.dep_label.grid(row=1, column=0, sticky='W')
+            self.dep_value.grid(row=1, column=1)
+        elif which == 'end':
+            self.today_label = tk.Label(self.date_frame, text=f'The flight has departed.')
+            self.today_label.grid(row=0, column=0)
 
         ### seat frame and values
-
         self.seat_frame = tk.Frame(self.stats_frame)
         self.seat_frame.grid(row=2, column=1, padx=5)
 
-        self.ac_label = tk.Label(self.seat_frame, text=f'Aircraft capacity:')
-        self.ac_value = tk.Label(self.seat_frame, text=f'{self.game.ac}')
-        if not self.game.easy_mode:
-            self.au_label = tk.Label(self.seat_frame, text=f'With overbooking:')
-            self.au_value = tk.Label(self.seat_frame, text=f'{self.game.au}')
-        self.lb_label = tk.Label(self.seat_frame, text=f'Seats sold:')
-        self.lb_value = tk.Label(self.seat_frame, text=f'{self.game.total_lb}')
-        self.sa_label = tk.Label(self.seat_frame, text=f'Remaining seats:')
-        self.sa_value = tk.Label(self.seat_frame, text=f'{self.game.sa}')
-
-        self.ac_label.grid(row=0, column=0, sticky='W')
-        self.ac_value.grid(row=0, column=1)
-        if not self.game.easy_mode:
-            self.au_label.grid(row=1, column=0, sticky='W')
-            self.au_value.grid(row=1, column=1)
-        self.lb_label.grid(row=2, column=0, sticky='W')
-        self.lb_value.grid(row=2, column=1)
-        self.sa_label.grid(row=3, column=0, sticky='W')
-        self.sa_value.grid(row=3, column=1)
+        if which == 'game':
+            # AC
+            self.ac_label = tk.Label(self.seat_frame, text=f'Aircraft capacity:')
+            self.ac_value = tk.Label(self.seat_frame, text=f'{self.game.ac}')
+            self.ac_label.grid(row=0, column=0, sticky='W')
+            self.ac_value.grid(row=0, column=1)
+            # AU
+            if not self.game.easy_mode:
+                self.au_label = tk.Label(self.seat_frame, text=f'With overbooking:')
+                self.au_value = tk.Label(self.seat_frame, text=f'{self.game.au}')
+                self.au_label.grid(row=1, column=0, sticky='W')
+                self.au_value.grid(row=1, column=1)
+            # LB
+            self.lb_label = tk.Label(self.seat_frame, text=f'Seats sold:')
+            self.lb_value = tk.Label(self.seat_frame, text=f'{self.game.total_lb}')
+            self.lb_label.grid(row=2, column=0, sticky='W')
+            self.lb_value.grid(row=2, column=1)
+            # SA
+            self.sa_label = tk.Label(self.seat_frame, text=f'Remaining seats:')
+            self.sa_value = tk.Label(self.seat_frame, text=f'{self.game.sa}')
+            self.sa_label.grid(row=3, column=0, sticky='W')
+            self.sa_value.grid(row=3, column=1)
+        elif which == 'end':
+            self.game.total_onboard = min(self.game.total_lb, self.game.ac)
+            # LB
+            self.lb_label = tk.Label(self.seat_frame, text=f'Total on board:')
+            self.lb_value = tk.Label(self.seat_frame, text=f'{self.game.total_onboard}')
+            self.lb_label.grid(row=0, column=0, sticky='W')
+            self.lb_value.grid(row=0, column=1)
+            # LF
+            self.lf_label = tk.Label(self.seat_frame, text=f'Final load factor:')
+            self.lf_value = tk.Label(self.seat_frame, text=f'{int(100 * self.game.total_onboard / self.game.ac)}%')
+            self.lf_label.grid(row=1, column=0, sticky='W')
+            self.lf_value.grid(row=1, column=1)
+            # DB
+            if not self.game.easy_mode:
+                self.db_label = tk.Label(self.seat_frame, text=f'Denied boardings:')
+                self.db_value = tk.Label(self.seat_frame, text=f'{self.game.dbs}')
+                self.db_label.grid(row=2, column=0, sticky='W')
+                self.db_value.grid(row=2, column=1)
 
         ### revenue frame and values
-
         self.rev_frame = tk.Frame(self.stats_frame)
         self.rev_frame.grid(row=3, column=1, padx=5)
 
         self.rev_label = tk.Label(self.rev_frame, text=f'Revenue:')
         self.rev_value = tk.Label(self.rev_frame, text=f'${self.game.total_rev:,}')
-
         self.rev_label.grid(row=0, column=0)
         self.rev_value.grid(row=0, column=1)
 
+        self.change_bg_to_white(self.left_frame)
         self.change_bg_to_white(self.stats_frame)
         self.change_bg_to_white(self.date_frame)
         self.change_bg_to_white(self.seat_frame)
@@ -532,8 +554,8 @@ class GUI():
     def build_departure_frame(self):
         self.dfdsim.dfd_cleanup()
 
-        self.stats_frame.destroy()
-        self.build_stats_frame()
+        # self.stats_frame.destroy()
+        self.build_stats_frame(which='game')
 
         # done with middle frame; leaderboard will go in right
         self.middle_frame.destroy()
@@ -620,51 +642,9 @@ class GUI():
             self.dfdsim.dfd_cleanup()
             self.middle_frame.destroy()
         # self.fc_frame.destroy()
-        self.build_end_stats_frame()
+        # self.stats_frame.destroy()
+        self.build_stats_frame('end')
         self.build_leaderboard_frame()
-
-
-    def build_end_stats_frame(self):
-        self.date_frame.destroy()
-        self.date_frame = tk.Frame(self.stats_frame)
-        self.date_frame.grid(row=1, column=1, padx=5)
-
-        self.today_label = tk.Label(self.date_frame, text=f'The flight has departed.')
-        self.today_label.grid(row=0, column=0)
-
-        self.seat_frame.destroy()
-        self.seat_frame = tk.Frame(self.stats_frame)
-        self.seat_frame.grid(row=2, column=1, padx=5)
-
-        self.game.total_onboard = min(self.game.total_lb, self.game.ac)
-
-        self.ac_label = tk.Label(self.seat_frame, text=f'Total on board:')
-        self.ac_value = tk.Label(self.seat_frame, text=f'{self.game.total_onboard}')
-        self.ac_label.grid(row=0, column=0, sticky='W')
-        self.ac_value.grid(row=0, column=1)
-        self.lf_label = tk.Label(self.seat_frame, text=f'Final load factor:')
-        self.lf_value = tk.Label(self.seat_frame, text=f'{int(100 * self.game.total_onboard / self.game.ac)}%')
-        self.lf_label.grid(row=1, column=0, sticky='W')
-        self.lf_value.grid(row=1, column=1)
-        if not self.game.easy_mode:
-            self.db_label = tk.Label(self.seat_frame, text=f'Denied boardings:')
-            self.db_value = tk.Label(self.seat_frame, text=f'{self.game.dbs}')
-            self.db_label.grid(row=2, column=0, sticky='W')
-            self.db_value.grid(row=2, column=1)
-
-        self.rev_frame.destroy()
-        self.rev_frame = tk.Frame(self.stats_frame)
-        self.rev_frame.grid(row=3, column=1, padx=5)
-        self.rev_label = tk.Label(self.rev_frame, text='Final revenue:')
-        self.rev_value = tk.Label(self.rev_frame, text=f'${self.game.total_rev:,}')
-        self.rev_label.grid(row=0, column=0, sticky='W')
-        self.rev_value.grid(row=0, column=1)
-
-        self.change_bg_to_white(self.left_frame)
-        self.change_bg_to_white(self.stats_frame)
-        self.change_bg_to_white(self.date_frame)
-        self.change_bg_to_white(self.seat_frame)
-        self.change_bg_to_white(self.rev_frame)
 
 
     def build_leaderboard_frame(self):
