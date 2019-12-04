@@ -1,12 +1,20 @@
 from pandas import DataFrame
 
+# EASY_FCDATA = {
+#     'dfd': [4,3,2,1,0],
+#     'dow_long': ['Monday','Tuesday','Wednesday','Thursday','Friday'], 
+#     'dow_short': ['Mon','Tue','Wed','Thu','Fri'], 
+#     'fare':[100,200,300,400,500], 
+#     'demand':[50,40,30,20,10],
+#     'stdev':[0,0,0,0,0]
+# }
 EASY_FCDATA = {
-    'dfd': [4,3,2,1,0],
-    'dow_long': ['Monday','Tuesday','Wednesday','Thursday','Friday'], 
-    'dow_short': ['Mon','Tue','Wed','Thu','Fri'], 
-    'fare':[100,200,300,400,500], 
-    'demand':[50,40,30,20,10],
-    'stdev':[5,5,5,5,5]
+    'dfd': [1,0],
+    'dow_long': ['Thursday','Friday'], 
+    'dow_short': ['Thu','Fri'], 
+    'fare':[400,500], 
+    'demand':[20,10],
+    'stdev':[0,0]
 }
 EASY_AC = 50
 
@@ -39,6 +47,7 @@ DB_HIGH = {'costs':[100,250,500,1000,2000,10000], 'weights':[0.03, 0.17, 0.45, 0
 class Scenario():
     
     def __init__(self, sc_dict):
+        self.name = sc_dict['name']
         self.fc = DataFrame(sc_dict['fc']).set_index('dfd')
         self.ndfd = len(self.fc) - 1
         self.ac = sc_dict['ac']
@@ -59,7 +68,7 @@ class RealScenario(Scenario):
         
 
 scenario_dict = {
-    0: {'fc':EASY_FCDATA, 'ac':EASY_AC},
-    1: {'fc':REAL1_FCDATA, 'ac':REAL1_AC, 'ns':REAL1_NSRATE, 'db':DB_HIGH},
-    2: {'fc':REAL2_FCDATA, 'ac':REAL2_AC, 'ns':REAL2_NSRATE, 'db':DB_LOW}
+    0: {'name':'Easy mode', 'fc':EASY_FCDATA, 'ac':EASY_AC},
+    1: {'name':'SFO', 'fc':REAL1_FCDATA, 'ac':REAL1_AC, 'ns':REAL1_NSRATE, 'db':DB_HIGH},
+    2: {'name':'NRT', 'fc':REAL2_FCDATA, 'ac':REAL2_AC, 'ns':REAL2_NSRATE, 'db':DB_LOW}
 }

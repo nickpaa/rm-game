@@ -6,6 +6,7 @@ from random import choices
 class Game():
 
     def __init__(self, scenario):
+        self.game_type = scenario.name
 
         self.ndfd = scenario.ndfd
         self.fc = scenario.fc
@@ -30,16 +31,13 @@ class EasyGame(Game):
 
     def __init__(self, scenario):
         Game.__init__(self, scenario)
-        self.game_type = 'Easy mode'
         self.easy_mode = True
-        self.fc['stdev'] = 0
 
 
 class RealGame(Game):
 
     def __init__(self, scenario):
         Game.__init__(self, scenario)
-        self.game_type = 'Real life mode'
         self.easy_mode = False
         self.ns_rate = scenario.ns_rate
         self.db_costs = scenario.db_costs
