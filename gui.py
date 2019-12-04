@@ -26,6 +26,10 @@ class GUI():
 
         self.entry_font = nametofont('TkTextFont')
         self.entry_font.configure(family='Helvetica', size='12')
+        
+        self.header_font = Font(family='Helvetica', size='14', weight='bold')
+        
+        self.label_font = Font(family='Helvetica', size='12', weight='bold')
 
         self.build_home()
 
@@ -92,49 +96,55 @@ class GUI():
         self.easy_button_path = 'images/100.png'
         self.easy_button_image = ImageTk.PhotoImage(Image.open(self.easy_button_path).resize((80,80), resample=5))
         self.easy_button = tk.Button(self.top_row_button_frame, text='Play easy mode', image=self.easy_button_image, compound='top', height=160, width=240, bg='white', 
-            command=self.play_easy_mode)
-        self.easy_button.grid(row=0, column=0, padx=20, pady=20)
+            command=self.play_easy_mode, pady=10)
+        self.easy_button.grid(row=0, column=0, padx=20, pady=10)
 
         self.real_button_people = ['man','woman','person']
         self.real_button_path = f'images/shrug{randint(1,6)}.png'
         self.real_button_image = ImageTk.PhotoImage(Image.open(self.real_button_path).resize((80,80), resample=5))
         self.real_button = tk.Button(self.top_row_button_frame, text='Play real life mode', image=self.real_button_image, compound='top', height=160, width=240, bg='white', 
-            command=self.build_real_button_frame)
-        self.real_button.grid(row=0, column=1, padx=20, pady=20)
+            command=self.build_real_button_frame, pady=10)
+        self.real_button.grid(row=0, column=1, padx=20, pady=10)
 
 
     def build_real_button_frame(self):
-        self.real_mode_button_frame = tk.Frame(self.button_frame, bg='white', relief='groove', borderwidth=5)
-        self.real_mode_button_frame.grid(row=1, column=0, sticky='S E W')
-        self.real_mode_button_frame.grid_rowconfigure(0, weight=1)
-        self.real_mode_button_frame.grid_rowconfigure(1, weight=1)
-        self.real_mode_button_frame.grid_columnconfigure(0, weight=1)
-        self.real_mode_button_frame.grid_columnconfigure(1, weight=1)
-        self.real_mode_button_frame.grid_columnconfigure(2, weight=1)
+        real_mode_button_frame = tk.Frame(self.button_frame, bg='white', relief='groove', borderwidth=5)
+        real_mode_button_frame.grid(row=1, column=0, sticky='S E W')
+        real_mode_button_frame.grid_rowconfigure((0,1), weight=1)
+        real_mode_button_frame.grid_columnconfigure((0,1,2), weight=1)
 
-        self.game1_button = tk.Button(self.real_mode_button_frame, text='Play game 1', bg='white', 
-            command=lambda: self.play_real_mode(1))
-        self.game1_button.grid(row=0, column=0, padx=(20, 10), pady=10)
+        game1_image_path = 'images/golden_gate_bridge.png'
+        game1_image = ImageTk.PhotoImage(Image.open(game1_image_path).resize((80,80), resample=5))
+        game1_button = tk.Button(real_mode_button_frame, text='SFO', bg='white', image=game1_image, compound='left',
+            command=lambda: self.play_real_mode(1), padx=5)
+        game1_button.image = game1_image
+        game1_button.grid(row=0, column=0, padx=(20, 10), pady=10)
 
-        self.game2_button = tk.Button(self.real_mode_button_frame, text='Play game 2', bg='white', 
-            command=lambda: self.play_real_mode(2))
-        self.game2_button.grid(row=0, column=1, padx=10, pady=10)
+        game2_image_path = 'images/oil_drum.png'
+        game2_image = ImageTk.PhotoImage(Image.open(game2_image_path).resize((80,80), resample=5))
+        game2_button = tk.Button(real_mode_button_frame, text='IAH', bg='white', image=game2_image, compound='left',
+            command=lambda: self.play_real_mode(2), padx=5)
+        game2_button.image = game2_image
+        game2_button.grid(row=0, column=1, padx=10, pady=10)
 
-        self.game3_button = tk.Button(self.real_mode_button_frame, text='Play game 3', bg='white', 
-            command=lambda: self.play_real_mode(3))
-        self.game3_button.grid(row=0, column=2, padx=(10, 20), pady=10)
+        game3_image_path = 'images/cherry_blossom.png'
+        game3_image = ImageTk.PhotoImage(Image.open(game3_image_path).resize((80,80), resample=5))
+        game3_button = tk.Button(real_mode_button_frame, text='NRT', bg='white', image=game3_image, compound='left',
+            command=lambda: self.play_real_mode(3), padx=5)
+        game3_button.image = game3_image
+        game3_button.grid(row=0, column=2, padx=(10, 20), pady=10)
 
-        self.game4_button = tk.Button(self.real_mode_button_frame, text='Play game 4', bg='white',
+        game4_button = tk.Button(real_mode_button_frame, text='Play game 4', bg='white',
             command=lambda: self.play_real_mode(4))
-        self.game4_button.grid(row=1, column=0, padx=(20, 10), pady=10)
+        game4_button.grid(row=1, column=0, padx=(20, 10), pady=10)
 
-        self.game5_button = tk.Button(self.real_mode_button_frame, text='Play game 5', bg='white',
+        game5_button = tk.Button(real_mode_button_frame, text='Play game 5', bg='white',
             command=lambda: self.play_real_mode(5))
-        self.game5_button.grid(row=1, column=1, padx=10, pady=10)
+        game5_button.grid(row=1, column=1, padx=10, pady=10)
 
-        self.game6_button = tk.Button(self.real_mode_button_frame, text='Play game 6', bg='white',
+        game6_button = tk.Button(real_mode_button_frame, text='Play game 6', bg='white',
             command=lambda: self.play_real_mode(6))
-        self.game6_button.grid(row=1, column=2, padx=(10, 20), pady=10)
+        game6_button.grid(row=1, column=2, padx=(10, 20), pady=10)
 
 
     def play_easy_mode(self):
@@ -235,7 +245,7 @@ class GUI():
         ### IMAGES
         
         self.stats_header = tk.Label(self.stats_frame, text=self.game.game_type, font='Helvetica 14 bold')
-        self.stats_header.grid(row=0, column=0, padx=5, pady=10)
+        self.stats_header.grid(row=0, column=0, columnspan=2, padx=5, pady=10)
 
         self.date_image = ImageTk.PhotoImage(Image.open('images/calendar.png').resize((80,80), resample=5))
         self.date_image_label = tk.Label(self.stats_frame, image=self.date_image)
@@ -258,17 +268,17 @@ class GUI():
         self.date_frame.columnconfigure((0,1), weight=1)
 
         if which == 'game':
-            self.today_label = tk.Label(self.date_frame, text=f'Today:')
+            self.today_label = tk.Label(self.date_frame, text=f'Today:', font=self.label_font)
             self.today_value = tk.Label(self.date_frame, text=f'{self.game.curr_dow_long}')
             self.today_label.grid(row=0, column=0, sticky='W')
             self.today_value.grid(row=0, column=1, sticky='E')
-            self.dep_label = tk.Label(self.date_frame, text=f'Departure:')
+            self.dep_label = tk.Label(self.date_frame, text=f'Departure:', font=self.label_font)
             self.dep_value = tk.Label(self.date_frame, text=f'Friday')
             self.dep_label.grid(row=1, column=0, sticky='W')
             self.dep_value.grid(row=1, column=1, sticky='E')
         elif which == 'end':
-            self.today_label = tk.Label(self.date_frame, text=f'The flight has departed.')
-            self.today_label.grid(row=0, column=0)
+            self.today_label = tk.Label(self.date_frame, text=f'The flight has departed.', font=self.label_font)
+            self.today_label.grid(row=0, column=0, sticky='W')
 
         ### seat frame and values
         self.seat_frame = tk.Frame(self.stats_frame)
@@ -278,41 +288,41 @@ class GUI():
 
         if which == 'game':
             # AC
-            self.ac_label = tk.Label(self.seat_frame, text=f'Aircraft capacity:')
+            self.ac_label = tk.Label(self.seat_frame, text=f'Aircraft capacity:', font=self.label_font)
             self.ac_value = tk.Label(self.seat_frame, text=f'{self.game.ac}')
             self.ac_label.grid(row=0, column=0, sticky='W')
             self.ac_value.grid(row=0, column=1, sticky='E')
             # AU
             if not self.game.easy_mode:
-                self.au_label = tk.Label(self.seat_frame, text=f'With overbooking:')
+                self.au_label = tk.Label(self.seat_frame, text=f'With overbooking:', font=self.label_font)
                 self.au_value = tk.Label(self.seat_frame, text=f'{self.game.au}')
                 self.au_label.grid(row=1, column=0, sticky='W')
                 self.au_value.grid(row=1, column=1, sticky='E')
             # LB
-            self.lb_label = tk.Label(self.seat_frame, text=f'Seats sold:')
+            self.lb_label = tk.Label(self.seat_frame, text=f'Seats sold:', font=self.label_font)
             self.lb_value = tk.Label(self.seat_frame, text=f'{self.game.total_lb}')
             self.lb_label.grid(row=2, column=0, sticky='W')
             self.lb_value.grid(row=2, column=1, sticky='E')
             # SA
-            self.sa_label = tk.Label(self.seat_frame, text=f'Remaining seats:')
+            self.sa_label = tk.Label(self.seat_frame, text=f'Remaining seats:', font=self.label_font)
             self.sa_value = tk.Label(self.seat_frame, text=f'{self.game.sa}')
             self.sa_label.grid(row=3, column=0, sticky='W')
             self.sa_value.grid(row=3, column=1, sticky='E')
         elif which == 'end':
             self.game.total_onboard = min(self.game.total_lb, self.game.ac)
             # LB
-            self.lb_label = tk.Label(self.seat_frame, text=f'Total on board:')
+            self.lb_label = tk.Label(self.seat_frame, text=f'Total on board:', font=self.label_font)
             self.lb_value = tk.Label(self.seat_frame, text=f'{self.game.total_onboard}')
             self.lb_label.grid(row=0, column=0, sticky='W')
             self.lb_value.grid(row=0, column=1, sticky='E')
             # LF
-            self.lf_label = tk.Label(self.seat_frame, text=f'Final load factor:')
+            self.lf_label = tk.Label(self.seat_frame, text=f'Final load factor:', font=self.label_font)
             self.lf_value = tk.Label(self.seat_frame, text=f'{int(100 * self.game.total_onboard / self.game.ac)}%')
             self.lf_label.grid(row=1, column=0, sticky='W')
             self.lf_value.grid(row=1, column=1, sticky='E')
             # DB
             if not self.game.easy_mode:
-                self.db_label = tk.Label(self.seat_frame, text=f'Denied boardings:')
+                self.db_label = tk.Label(self.seat_frame, text=f'Denied boardings:', font=self.label_font)
                 self.db_value = tk.Label(self.seat_frame, text=f'{self.game.dbs}')
                 self.db_label.grid(row=2, column=0, sticky='W')
                 self.db_value.grid(row=2, column=1, sticky='E')
@@ -322,11 +332,26 @@ class GUI():
         self.rev_frame.grid(row=3, column=1, padx=10, sticky='E W')
         self.rev_frame.columnconfigure((0,1), weight=1)
 
-        self.rev_label = tk.Label(self.rev_frame, text=f'Revenue:')
-        self.rev_value = tk.Label(self.rev_frame, text=f'${self.game.total_rev:,}')
+        # rev
+        self.rev_label = tk.Label(self.rev_frame, text=f'Revenue:', font=self.label_font)
+        if (which == 'game') or self.game.easy_mode:
+            self.rev_value = tk.Label(self.rev_frame, text=f'${self.game.total_rev:,}')
+        elif (which == 'end') and not self.game.easy_mode:
+            self.rev_value = tk.Label(self.rev_frame, text=f'${self.game.total_rev + self.game.db_cost:,}')  # need to back into pre-DB rev
         self.rev_label.grid(row=0, column=0, sticky='W')
         self.rev_value.grid(row=0, column=1, sticky='E')
-
+        if (which == 'end') and not self.game.easy_mode:
+            # DB cost
+            self.db_cost_label = tk.Label(self.rev_frame, text=f'DB cost:', font=self.label_font)
+            self.db_cost_value = tk.Label(self.rev_frame, text=f'${self.game.db_cost:,}')
+            self.db_cost_label.grid(row=1, column=0, sticky='W')
+            self.db_cost_value.grid(row=1, column=1, sticky='E')
+            # Final rev
+            self.final_rev_label = tk.Label(self.rev_frame, text=f'Final revenue:', font=self.label_font)
+            self.final_rev_value = tk.Label(self.rev_frame, text=f'${self.game.total_rev:,}')
+            self.final_rev_label.grid(row=1, column=0, sticky='W')
+            self.final_rev_value.grid(row=1, column=1, sticky='E')
+                
         self.change_bg_to_white(self.left_frame)
         self.change_bg_to_white(self.stats_frame)
         self.change_bg_to_white(self.date_frame)
@@ -340,17 +365,17 @@ class GUI():
         self.fc_frame.rowconfigure(1, weight=1)
         self.fc_frame.columnconfigure(0, weight=1)
 
-        self.fc_header = tk.Label(self.fc_frame, text='--- Forecast ---', font='Helvetica 14 bold')
+        self.fc_header = tk.Label(self.fc_frame, text='Forecast', font=self.header_font)
         self.fc_header.grid(row=0, column=0, padx=5, pady=10)
 
         self.fc_value_frame = tk.Frame(self.fc_frame)
         self.fc_value_frame.grid(row=1, column=0)
 
-        self.fc_label_1 = tk.Label(self.fc_value_frame, text='Book day', font='Helvetica 14 bold')
-        self.fc_label_2 = tk.Label(self.fc_value_frame, text='Fare', font='Helvetica 14 bold')
-        self.fc_label_3 = tk.Label(self.fc_value_frame, text='Demand', font='Helvetica 14 bold')
+        self.fc_label_1 = tk.Label(self.fc_value_frame, text='Book day', font=self.label_font)
+        self.fc_label_2 = tk.Label(self.fc_value_frame, text='Fare', font=self.label_font)
+        self.fc_label_3 = tk.Label(self.fc_value_frame, text='Demand', font=self.label_font)
         if not self.game.easy_mode:
-            self.fc_label_4 = tk.Label(self.fc_value_frame, text='Confidence', font='Helvetica 14 bold')
+            self.fc_label_4 = tk.Label(self.fc_value_frame, text='Confidence', font=self.label_font)
         
         self.fc_label_1.grid(row=0, column=0, padx=5, pady=10)  # DOW
         self.fc_label_2.grid(row=0, column=1, padx=5, pady=10)  # fare
@@ -622,7 +647,6 @@ class GUI():
 
 
     def end_game(self):
-        # self.dfdsim.dfd_cleanup() -- moved to build_end
         self.add_results_to_db()
         self.build_end()
 
@@ -640,7 +664,6 @@ class GUI():
 
 
     def build_end(self):
-        # self.right_frame.destroy() -- not needed, destroying middle in build_departure_frame
         if self.game.easy_mode:
             self.dfdsim.dfd_cleanup()
             self.middle_frame.destroy()
@@ -656,7 +679,7 @@ class GUI():
         self.lb_frame.rowconfigure(1, weight=1)
         self.lb_frame.columnconfigure(0, weight=1)
 
-        self.lb_header = tk.Label(self.lb_frame, text='--- Leaderboard ---', font='Helvetica 14 bold')
+        self.lb_header = tk.Label(self.lb_frame, text='Leaderboard', font=self.header_font)
         self.lb_header.grid(row=0, column=0, padx=5)
 
         self.lb_value_frame = tk.Frame(self.lb_frame)
@@ -664,10 +687,10 @@ class GUI():
 
         self.results_df = self.get_results()
 
-        self.lb_label_1 = tk.Label(self.lb_value_frame, text='Name')
-        self.lb_label_2 = tk.Label(self.lb_value_frame, text='From')
-        self.lb_label_3 = tk.Label(self.lb_value_frame, text='Game')
-        self.lb_label_4 = tk.Label(self.lb_value_frame, text='Revenue')
+        self.lb_label_1 = tk.Label(self.lb_value_frame, text='Name', font=self.label_font)
+        self.lb_label_2 = tk.Label(self.lb_value_frame, text='From', font=self.label_font)
+        self.lb_label_3 = tk.Label(self.lb_value_frame, text='Game', font=self.label_font)
+        self.lb_label_4 = tk.Label(self.lb_value_frame, text='Revenue', font=self.label_font)
 
         self.lb_label_1.grid(row=0, column=0, padx=5, pady=10)  # name
         self.lb_label_2.grid(row=0, column=1, padx=5, pady=10)  # from
@@ -678,12 +701,12 @@ class GUI():
         player_on_leaderboard = False
 
         def add_this_player():
-            tk.Label(self.lb_value_frame, text=self.game.player).grid(row=i+1, column=0, padx=5, pady=5)
-            tk.Label(self.lb_value_frame, text=self.game.location).grid(row=i+1, column=1, padx=5, pady=5)
-            tk.Label(self.lb_value_frame, text=self.game.game_type).grid(row=i+1, column=2, padx=5, pady=5)
-            tk.Label(self.lb_value_frame, text=f'${self.game.total_rev:,}').grid(row=i+1, column=3, padx=5, pady=5)
+            tk.Label(self.lb_value_frame, text=self.game.player, fg='#0033A0', font=self.label_font).grid(row=i+1, column=0, padx=5, pady=5)
+            tk.Label(self.lb_value_frame, text=self.game.location, fg='#0033A0', font=self.label_font).grid(row=i+1, column=1, padx=5, pady=5)
+            tk.Label(self.lb_value_frame, text=self.game.game_type, fg='#0033A0', font=self.label_font).grid(row=i+1, column=2, padx=5, pady=5)
+            tk.Label(self.lb_value_frame, text=f'${self.game.total_rev:,}', fg='#0033A0').grid(row=i+1, column=3, padx=5, pady=5)
 
-        for i in range(min(8, len(self.results_df))):
+        for i in range(min(10, len(self.results_df))):
             if (self.results_df.loc[i, 'revenue'] > self.game.total_rev) or player_on_leaderboard:
                 tk.Label(self.lb_value_frame, text=self.results_df.loc[i, 'name']).grid(row=i+1, column=0, padx=5, pady=5)
                 tk.Label(self.lb_value_frame, text=self.results_df.loc[i, 'location']).grid(row=i+1, column=1, padx=5, pady=5)
@@ -708,25 +731,15 @@ class GUI():
 
 
     def get_results(self):
-        easy_query = """
+        query = f"""
         select * 
         from results 
-        where game = 'Easy mode' 
-        order by revenue desc, gametime desc;
-        """
-
-        real_query = """
-        select * 
-        from results 
-        where game <> 'Easy mode' 
+        where game = '{self.game.game_type}' 
         order by revenue desc, gametime desc;
         """
 
         conn = create_connection(db_file)
-        if self.game.easy_mode:
-            df = pd.read_sql_query(easy_query, conn)
-        else:
-            df = pd.read_sql_query(real_query, conn)
+        df = pd.read_sql_query(query, conn)
         conn.close()
 
         return df
