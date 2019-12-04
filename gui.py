@@ -45,19 +45,21 @@ class GUI():
         self.build_logo_frame()
         self.build_player_frame()
         self.build_button_frame()
+        self.build_home_option_frame()
         
-        # TODO: display leaderboard and admin options
-        # self.build_option_frame()
-
 
     def build_logo_frame(self):
         self.logo_frame = tk.Frame(self.home, padx=20, pady=20, relief='groove', borderwidth=5, bg='white')
-        self.logo_frame.grid(row=0, column=0, padx=10, sticky='N S W', rowspan=3)
+        self.logo_frame.rowconfigure(0, weight=1)
+        self.logo_frame.columnconfigure(0, weight=1)
+        self.logo_frame.grid(row=0, column=0, padx=10, sticky='N S E W', rowspan=3)
 
         self.logo_path = 'images/airplane_title.png'
         self.logo_img = ImageTk.PhotoImage(Image.open(self.logo_path))
-        self.logo = tk.Label(self.home, image=self.logo_img)
-        self.logo.grid(row=0, column=0, rowspan=4)
+        self.logo = tk.Label(self.logo_frame, image=self.logo_img)
+        self.logo.grid(row=0, column=0, sticky='N S E W')
+
+        self.change_bg_to_white(self.logo_frame)
 
 
     def build_player_frame(self):
@@ -87,7 +89,7 @@ class GUI():
 
 
     def build_button_frame(self):
-        self.button_frame = tk.Frame(self.home)
+        self.button_frame = tk.Frame(self.home, pady=10)
         self.button_frame.grid(row=1, column=1, sticky='W S E')
 
         self.top_row_button_frame = tk.Frame(self.button_frame, bg='white', relief='groove', borderwidth=5)
@@ -106,6 +108,30 @@ class GUI():
             command=self.build_real_button_frame, pady=10)
         self.real_button.grid(row=0, column=1, padx=20, pady=10)
 
+        
+    def build_home_option_frame(self):
+        self.home_option_frame = tk.Frame(self.home, relief='groove', borderwidth=5, bg='white')
+        self.home_option_frame.grid(row=2, column=1, pady=(20, 0), sticky='E')
+
+        self.leaderboard_button = tk.Button(self.home_option_frame, text='Leaderboard', fg='#0033A0', command=self.display_leaderboard)
+        self.leaderboard_button.grid(row=0, column=0, padx=(10, 5), pady=10, sticky='E')
+
+        self.admin_button = tk.Button(self.home_option_frame, text='Admin', fg='#0033A0', command=self.view_admin)
+        self.admin_button.grid(row=0, column=1, padx=(5, 10), pady=10, sticky='E')
+
+        self.change_bg_to_white(self.home_option_frame)
+
+        self.leaderboard_button['state'] = 'disabled'
+        self.admin_button['state'] = 'disabled'
+
+
+    def display_leaderboard(self):
+        pass
+
+
+    def view_admin(self):
+        pass
+
 
     def build_real_button_frame(self):
         real_mode_button_frame = tk.Frame(self.button_frame, bg='white', relief='groove', borderwidth=5)
@@ -113,38 +139,52 @@ class GUI():
         real_mode_button_frame.grid_rowconfigure((0,1), weight=1)
         real_mode_button_frame.grid_columnconfigure((0,1,2), weight=1)
 
-        game1_image_path = 'images/golden_gate_bridge.png'
+        game1_image_path = 'images/bridge.png'
         game1_image = ImageTk.PhotoImage(Image.open(game1_image_path).resize((80,80), resample=5))
         game1_button = tk.Button(real_mode_button_frame, text='SFO', bg='white', image=game1_image, compound='left',
             command=lambda: self.play_real_mode(1), padx=5)
         game1_button.image = game1_image
         game1_button.grid(row=0, column=0, padx=(20, 10), pady=10)
 
-        game2_image_path = 'images/oil_drum.png'
+        game2_image_path = 'images/oil.png'
         game2_image = ImageTk.PhotoImage(Image.open(game2_image_path).resize((80,80), resample=5))
         game2_button = tk.Button(real_mode_button_frame, text='IAH', bg='white', image=game2_image, compound='left',
             command=lambda: self.play_real_mode(2), padx=5)
         game2_button.image = game2_image
         game2_button.grid(row=0, column=1, padx=10, pady=10)
 
-        game3_image_path = 'images/cherry_blossom.png'
+        game3_image_path = 'images/cherry.png'
         game3_image = ImageTk.PhotoImage(Image.open(game3_image_path).resize((80,80), resample=5))
         game3_button = tk.Button(real_mode_button_frame, text='NRT', bg='white', image=game3_image, compound='left',
             command=lambda: self.play_real_mode(3), padx=5)
         game3_button.image = game3_image
         game3_button.grid(row=0, column=2, padx=(10, 20), pady=10)
 
-        game4_button = tk.Button(real_mode_button_frame, text='Play game 4', bg='white',
-            command=lambda: self.play_real_mode(4))
+        game4_image_path = 'images/fountain.png'
+        game4_image = ImageTk.PhotoImage(Image.open(game4_image_path).resize((80,80), resample=5))
+        game4_button = tk.Button(real_mode_button_frame, text='FCO', bg='white', image=game4_image, compound='left',
+            command=lambda: self.play_real_mode(4), padx=5)
+        game4_button.image = game4_image
         game4_button.grid(row=1, column=0, padx=(20, 10), pady=10)
 
-        game5_button = tk.Button(real_mode_button_frame, text='Play game 5', bg='white',
-            command=lambda: self.play_real_mode(5))
+        game5_image_path = 'images/beach.png'
+        game5_image = ImageTk.PhotoImage(Image.open(game5_image_path).resize((80,80), resample=5))
+        game5_button = tk.Button(real_mode_button_frame, text='HNL', bg='white', image=game5_image, compound='left',
+            command=lambda: self.play_real_mode(5), padx=5)
+        game5_button.image = game5_image
         game5_button.grid(row=1, column=1, padx=10, pady=10)
 
-        game6_button = tk.Button(real_mode_button_frame, text='Play game 6', bg='white',
-            command=lambda: self.play_real_mode(6))
+        game6_image_path = 'images/outdoors.png'
+        game6_image = ImageTk.PhotoImage(Image.open(game6_image_path).resize((80,80), resample=5))
+        game6_button = tk.Button(real_mode_button_frame, text='SJO', bg='white', image=game6_image, compound='left',
+            command=lambda: self.play_real_mode(6), padx=5)
+        game6_button.image = game6_image
         game6_button.grid(row=1, column=2, padx=(10, 20), pady=10)
+
+        game3_button['state'] = 'disabled'
+        game4_button['state'] = 'disabled'
+        game5_button['state'] = 'disabled'
+        game6_button['state'] = 'disabled'
 
 
     def play_easy_mode(self):
@@ -192,8 +232,8 @@ class GUI():
         self.right_frame.rowconfigure(0, weight=1)
         self.right_frame.columnconfigure(0, weight=1)
 
-        self.option_frame = tk.Frame(self.main, padx=10, pady=20, relief='groove', borderwidth=5, bg='white')
-        self.option_frame.grid(row=1, column=2, padx=10, pady=(50, 0), sticky='S E')
+        self.game_option_frame = tk.Frame(self.main, padx=10, pady=20, relief='groove', borderwidth=5, bg='white')
+        self.game_option_frame.grid(row=1, column=2, padx=10, pady=(50, 0), sticky='S E')
 
         self.build_stats_frame(which='game')
         self.build_forecast_frame()
@@ -201,7 +241,7 @@ class GUI():
             self.build_overbook_frame()
         else:
             self.build_reserve_frame()
-        self.build_option_frame()
+        self.build_game_option_frame()
 
         self.dfdsim = DFDSimulation(self.game, self.game.curr_dfd)
 
@@ -210,15 +250,11 @@ class GUI():
         self.change_bg_to_white(self.right_frame)
 
 
-    def build_option_frame(self):
-        # check if parent is home or game
-        # if home, offer leaderboard and admin buttons
-        # if game, offer quit or main menu button
-        
-        self.return_to_home_button = tk.Button(self.option_frame, text='Main menu', fg='red', command=self.return_to_home)
+    def build_game_option_frame(self):    
+        self.return_to_home_button = tk.Button(self.game_option_frame, text='Main menu', fg='#0033A0', command=self.return_to_home)
         self.return_to_home_button.grid(row=0, column=0)
 
-        self.change_bg_to_white(self.option_frame)
+        self.change_bg_to_white(self.game_option_frame)
 
 
     def return_to_home(self):
