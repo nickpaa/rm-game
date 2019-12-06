@@ -1,75 +1,60 @@
-import sqlite3
-from sqlite3 import Error
-import numpy as np
+from sqlite3 import register_adapter, connect
+from numpy import int64
+from pandas import read_sql_query
 
 
-db_file = 'results.db'
+class GameDB():
 
-sqlite3.register_adapter(np.int64, lambda val: int(val))
+    def __init__(self, db_file):
+        self.db_file = db_file
+        register_adapter(int64, lambda val: int(val))
 
-
-def create_connection(db_file):
-    """ create a database connection to the SQLite database
-        specified by db_file
-    :param db_file: database file
-    :return: Connection object or None
-    """
-    conn = None
-    try:
-        conn = sqlite3.connect(db_file)
+    def create_connection(self):
+        conn = connect(self.db_file)
         return conn
-    except Error as e:
-        print(e)
- 
-    return conn
 
+    def create_table(self):
+        conn = self.create_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS results (
+                id integer PRIMARY KEY,
+                name text NOT NULL,
+                location text NOT NULL,
+                game text NOT NULL,
+                revenue integer NOT NULL,
+                gametime text
+            );
+        """)
+        conn.close()
 
-def create_table(conn, create_table_sql):
-    """ create a table from the create_table_sql statement
-    :param conn: Connection object
-    :param create_table_sql: a CREATE TABLE statement
-    :return:
-    """
-    try:
-        c = conn.cursor()
-        c.execute(create_table_sql)
-    except Error as e:
-        print(e)
+    def insert_results(self, result):
+        conn = self.create_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO results(
+                name, location, game, revenue, gametime)
+            VALUES(?,?,?,?,?)
+            ;
+            """, result)
+        conn.commit()
+        conn.close()
 
+    def get_all_results(self):
+        conn = self.create_connection()
+        return read_sql_query('SELECT * FROM results ORDER BY revenue desc, gametime desc', conn)
 
-create_string = """
-CREATE TABLE IF NOT EXISTS results (
-    id integer PRIMARY KEY,
-    name text NOT NULL,
-    location text NOT NULL,
-    game text NOT NULL,
-    revenue integer NOT NULL,
-    gametime text
-);
-"""
+    def get_some_results(self, which_game):
+        conn = self.create_connection()
+        return read_sql_query(f"SELECT * FROM results where game = '{which_game}' ORDER BY revenue desc, gametime desc", conn)
 
-
-def main():
-    db_file = 'results.db'
-
-    conn = create_connection(db_file)
-    if conn:
-        create_table(conn, create_string)
-    else:
-        print('Error - can\'t create database connection')
-
-
-def insert_results(conn, result):
-    sql = """ INSERT INTO results(name, location, game, revenue, gametime)
-        VALUES(?,?,?,?,?);"""
-    cur = conn.cursor()
-    cur.execute(sql, result)
-    conn.commit()
-
-
-def drop_results(conn):
-    pass
+    def drop_results(self):
+        conn = self.create_connection()
+        cur = conn.cursor()
+        cur.execute(""" DELETE FROM results; """)
+        conn.commit()
+        conn.close()
 
 
 if __name__ == '__main__':
-    main()
+    test = GameDB('test.db')

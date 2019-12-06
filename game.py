@@ -75,6 +75,13 @@ class DFDSimulation():
         self.game.total_lb += self.lb
         self.game.sa -= self.lb
 
+    def update_demand(self):
+        if not self.game.easy_mode:
+            self.game.fc['a'] = (self.game.fc[:, 'demand'] ** 2) / (self.game.fc[:, 'stdev'] ** 2)
+            self.game.fc['scale'] = (self.game.fc[:, 'stdev'] ** 2) / self.game.fc[:, 'demand']
+            self.game.fc['updated_demand'] = int(gamma.rvs(a=self.game.fc['a'], scale=self.game.fc['scale']))
+
+
     def dfd_cleanup(self):
         self.game.fc.drop(self.dfd, axis=0, inplace=True)
         self.game.curr_dfd -= 1
@@ -82,3 +89,12 @@ class DFDSimulation():
             self.game.curr_dow_long = self.game.fc.loc[self.game.curr_dfd, 'dow_long']
             self.game.curr_dow_short = self.game.fc.loc[self.game.curr_dfd, 'dow_short']
 
+
+if __name__ == '__main__':
+    from scenario import *
+    g = RealGame(RealScenario(scenario_dict[1]))
+    d = DFDSimulation(g, 4)
+    print(d.game.fc)
+    d.update_demand()
+    print('updated')
+    print(d.game.fc)
