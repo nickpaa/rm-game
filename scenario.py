@@ -6,7 +6,7 @@ from pandas import DataFrame
 #     'dow_short': ['Mon','Tue','Wed','Thu','Fri'], 
 #     'fare':[100,200,300,400,500], 
 #     'demand':[50,40,30,20,10],
-#     'stdev':[0,0,0,0,0]
+#     'cv':[0,0,0,0,0]
 # }
 EASY_FCDATA = {
     'dfd': [1,0],
@@ -14,7 +14,7 @@ EASY_FCDATA = {
     'dow_short': ['Thu','Fri'], 
     'fare':[400,500], 
     'demand':[20,10],
-    'stdev':[0,0]
+    'cv':[0,0]
 }
 EASY_AC = 50
 
@@ -24,7 +24,7 @@ REAL1_FCDATA = {
     'dow_short': ['Mon','Tue','Wed','Thu','Fri'], 
     'fare':[100,200,300,400,500], 
     'demand':[50,40,30,20,10],
-    'stdev':[5,5,5,5,5]
+    'cv':[0.05,0.1,0.15,0.2,0.25]
 }
 REAL1_AC = 100
 REAL1_NSRATE = 0.02
@@ -35,7 +35,7 @@ REAL2_FCDATA = {
     'dow_short': ['Thu','Fri'], 
     'fare':[400,500], 
     'demand':[20,10],
-    'stdev':[5,5]
+    'cv':[0.1,0.2]
 }
 REAL2_AC = 20
 REAL2_NSRATE = 0.04
@@ -49,6 +49,7 @@ class Scenario():
     def __init__(self, sc_dict):
         self.name = sc_dict['name']
         self.fc = DataFrame(sc_dict['fc']).set_index('dfd')
+        self.fc['stdev'] = self.fc['demand'] * self.fc['cv']
         self.ndfd = len(self.fc) - 1
         self.ac = sc_dict['ac']
 

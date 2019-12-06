@@ -128,20 +128,35 @@ class GUI():
     def build_home_leaderboard(self):
         self.player_frame.destroy()
         self.button_frame.destroy()
-        self.build_leaderboard_frame(which='home')
-        self.build_leaderboard_admin_option_frame()
+        self.build_home_leaderboard_frame()
+        self.build_leaderboard_option_frame()
 
 
-    def build_leaderboard_admin_option_frame(self):
+    def build_leaderboard_option_frame(self):
         self.home_option_frame.destroy()
 
-        self.leaderboard_admin_option_frame = tk.Frame(self.home, relief='groove', borderwidth=5, bg='white')
-        self.leaderboard_admin_option_frame.grid(row=2, column=1, pady=(20, 0), sticky='S E')
-        self.leaderboard_admin_option_frame.rowconfigure(0, weight=1)
-        self.leaderboard_admin_option_frame.columnconfigure(0, weight=1)
+        self.leaderboard_option_frame = tk.Frame(self.home, relief='groove', borderwidth=5, bg='white')
+        self.leaderboard_option_frame.grid(row=2, column=1, pady=(20, 0), sticky='S E')
+        self.leaderboard_option_frame.rowconfigure(0, weight=1)
+        self.leaderboard_option_frame.columnconfigure(0, weight=1)
 
-        self.main_menu_button = tk.Button(self.leaderboard_admin_option_frame, text='Main menu', fg='#0033A0', command=self.rebuild_home_from_home)
-        self.main_menu_button.grid(row=0, column=0, padx=10, pady=10)
+        self.all_leaders_button = tk.Button(self.leaderboard_option_frame, text='All-time leaders', fg='#0033A0', command=self.switch_lb_to_all)
+        self.all_leaders_button.grid(row=0, column=0, padx=10, pady=10)
+        self.all_leaders_button['state'] = 'disabled'
+
+        self.todays_leaders_button = tk.Button(self.leaderboard_option_frame, text='Today\'s leaders', fg='#0033A0', command=self.switch_lb_to_today)
+        self.todays_leaders_button.grid(row=0, column=1, padx=10, pady=10)
+        self.todays_leaders_button['state'] = 'disabled'
+
+        self.main_menu_button = tk.Button(self.leaderboard_option_frame, text='Main menu', fg='#0033A0', command=self.rebuild_home_from_home)
+        self.main_menu_button.grid(row=0, column=2, padx=10, pady=10)
+
+
+    def switch_lb_to_all():
+        pass
+
+    def switch_lb_to_today():
+        pass
 
 
     def rebuild_home_from_home(self):
@@ -153,7 +168,7 @@ class GUI():
         self.player_frame.destroy()
         self.button_frame.destroy()
         self.build_admin_frame()
-        self.build_leaderboard_admin_option_frame()
+        self.build_leaderboard_option_frame()
 
 
     def build_admin_frame(self):
@@ -320,7 +335,7 @@ class GUI():
         
         ### IMAGES
         
-        self.stats_header = tk.Label(self.stats_frame, text=self.game.game_type, font='Helvetica 14 bold')
+        self.stats_header = tk.Label(self.stats_frame, text=f'Flight to {self.game.game_type}', font='Helvetica 14 bold')
         self.stats_header.grid(row=0, column=0, columnspan=2, padx=5, pady=10)
 
         self.date_image = ImageTk.PhotoImage(Image.open('images/calendar.png').resize((80,80), resample=5))
@@ -340,7 +355,7 @@ class GUI():
 
         ### date frame and values
         self.date_frame = tk.Frame(self.stats_frame)
-        self.date_frame.grid(row=1, column=1, padx=10, sticky='E W')
+        self.date_frame.grid(row=1, column=1, padx=(0,30), sticky='E W')
         self.date_frame.columnconfigure((0,1), weight=1)
 
         if which == 'game':
@@ -358,7 +373,7 @@ class GUI():
 
         ### seat frame and values
         self.seat_frame = tk.Frame(self.stats_frame)
-        self.seat_frame.grid(row=2, column=1, padx=10, sticky='E W')
+        self.seat_frame.grid(row=2, column=1, padx=(0,30), sticky='E W')
         self.seat_frame.columnconfigure((0,1), weight=1)
 
 
@@ -405,7 +420,7 @@ class GUI():
 
         ### revenue frame and values
         self.rev_frame = tk.Frame(self.stats_frame)
-        self.rev_frame.grid(row=3, column=1, padx=10, sticky='E W')
+        self.rev_frame.grid(row=3, column=1, padx=(0,30), sticky='E W')
         self.rev_frame.columnconfigure((0,1), weight=1)
 
         # rev
@@ -422,7 +437,10 @@ class GUI():
         if (which == 'end') and not self.game.easy_mode:
             # DB cost
             self.db_cost_label = tk.Label(self.rev_frame, text=f'DB cost:', font=self.label_font)
-            self.db_cost_value = tk.Label(self.rev_frame, text=f'${self.game.db_cost:,}')
+            if self.game.dbs > 0:
+                self.db_cost_value = tk.Label(self.rev_frame, text=f'${self.game.total_db_cost:,}')
+            else:
+                self.db_cost_value = tk.Label(self.rev_frame, text=f'$0')
             self.db_cost_label.grid(row=1, column=0, sticky='W')
             self.db_cost_value.grid(row=1, column=1, sticky='E')
             # Final rev
@@ -445,57 +463,58 @@ class GUI():
         self.fc_frame.columnconfigure(0, weight=1)
 
         self.fc_header = tk.Label(self.fc_frame, text='Forecast', font=self.header_font)
-        self.fc_header.grid(row=0, column=0, padx=5, pady=10)
+        self.fc_header.grid(row=0, column=0, padx=10, pady=10)
 
         self.fc_value_frame = tk.Frame(self.fc_frame)
         self.fc_value_frame.grid(row=1, column=0)
 
-        self.fc_label_1 = tk.Label(self.fc_value_frame, text='Book day', font=self.label_font)
+        self.fc_label_1 = tk.Label(self.fc_value_frame, text='Booking\nday', font=self.label_font)
         self.fc_label_2 = tk.Label(self.fc_value_frame, text='Fare', font=self.label_font)
-        self.fc_label_3 = tk.Label(self.fc_value_frame, text='Demand', font=self.label_font)
+        self.fc_label_3 = tk.Label(self.fc_value_frame, text='Average\ndemand', font=self.label_font)
         if not self.game.easy_mode:
-            self.fc_label_4 = tk.Label(self.fc_value_frame, text='Confidence', font=self.label_font)
+            self.fc_label_4 = tk.Label(self.fc_value_frame, text='Likely\nrange', font=self.label_font)
         
-        self.fc_label_1.grid(row=0, column=0, padx=5, pady=10)  # DOW
-        self.fc_label_2.grid(row=0, column=1, padx=5, pady=10)  # fare
+        self.fc_label_1.grid(row=0, column=0, padx=10, pady=10)  # DOW
+        self.fc_label_2.grid(row=0, column=1, padx=10, pady=10)  # fare
         if self.game.easy_mode:
-            self.fc_label_3.grid(row=0, column=2, padx=(5, 10), pady=10)  # demand
+            self.fc_label_3.grid(row=0, column=2, padx=10, pady=10)  # demand
         else:
-            self.fc_label_3.grid(row=0, column=2, padx=5, pady=10)  # demand
-            self.fc_label_4.grid(row=0, column=3, padx=(5, 10), pady=10)  # stdev
+            self.fc_label_3.grid(row=0, column=2, padx=10, pady=10)  # demand
+            self.fc_label_4.grid(row=0, column=3, padx=10, pady=10)  # stdev
 
         # create and place forecast value labels
         for i, dfd in enumerate(range(self.game.curr_dfd, -1, -1)):
-            tk.Label(self.fc_value_frame, text=self.game.fc.loc[dfd, 'dow_short']).grid(row=i+2, column=0, padx=(10, 5))
-            tk.Label(self.fc_value_frame, text=f"${self.game.fc.loc[dfd, 'fare']:,}").grid(row=i+2, column=1, padx=5, pady=10)
+            tk.Label(self.fc_value_frame, text=self.game.fc.loc[dfd, 'dow_short']).grid(row=i+2, column=0, padx=10)
+            tk.Label(self.fc_value_frame, text=f"${self.game.fc.loc[dfd, 'fare']:,}").grid(row=i+2, column=1, padx=10, pady=10)
             if self.game.easy_mode:
-                tk.Label(self.fc_value_frame, text=self.game.fc.loc[dfd, 'demand']).grid(row=i+2, column=2, padx=(5, 10), pady=10)
+                tk.Label(self.fc_value_frame, text=self.game.fc.loc[dfd, 'demand']).grid(row=i+2, column=2, padx=10, pady=10)
             else:
-                tk.Label(self.fc_value_frame, text=self.game.fc.loc[dfd, 'demand']).grid(row=i+2, column=2, padx=5, pady=10)
-                confidence = self.convert_stdev_to_confidence(self.game.fc.loc[dfd, 'demand'], self.game.fc.loc[dfd, 'stdev'])
-                tk.Label(self.fc_value_frame, text=confidence).grid(row=i+2, column=3, padx=(5, 10), pady=10)
+                tk.Label(self.fc_value_frame, text=self.game.fc.loc[dfd, 'demand']).grid(row=i+2, column=2, padx=10, pady=10)
+                range_low = int(self.game.fc.loc[dfd, 'demand'] - 2 * self.game.fc.loc[dfd, 'stdev'])
+                range_high = int(self.game.fc.loc[dfd, 'demand'] + 2 * self.game.fc.loc[dfd, 'stdev'])
+                tk.Label(self.fc_value_frame, text=f'{range_low}...{range_high}').grid(row=i+2, column=3, padx=10, pady=10)
 
         # create and place blank row between values and total
-        tk.Label(self.fc_value_frame, text='     ').grid(row=i+3, column=0, padx=(10, 5))
-        tk.Label(self.fc_value_frame, text='     ').grid(row=i+3, column=1, padx=5, pady=10)
+        tk.Label(self.fc_value_frame, text='     ').grid(row=i+3, column=0, padx=10)
+        tk.Label(self.fc_value_frame, text='     ').grid(row=i+3, column=1, padx=10, pady=10)
         if self.game.easy_mode:
-            tk.Label(self.fc_value_frame, text='     ').grid(row=i+3, column=2, padx=(5, 10), pady=10)
+            tk.Label(self.fc_value_frame, text='     ').grid(row=i+3, column=2, padx=10, pady=10)
         else:
-            tk.Label(self.fc_value_frame, text='     ').grid(row=i+3, column=2, padx=5, pady=10)
-            tk.Label(self.fc_value_frame, text='     ').grid(row=i+3, column=3, padx=(5, 10), pady=10)
+            tk.Label(self.fc_value_frame, text='     ').grid(row=i+3, column=2, padx=10, pady=10)
+            tk.Label(self.fc_value_frame, text='     ').grid(row=i+3, column=3, padx=10, pady=10)
 
         # create and place demand total labels
         tk.Label(self.fc_value_frame, text='Remaining demand').grid(row=i+4, column=0, pady=10, columnspan=2)
-        tk.Label(self.fc_value_frame, text=self.game.fc['demand'].sum()).grid(row=i+4, column=2, pady=10)
+        tk.Label(self.fc_value_frame, text=self.game.fc['demand'].sum()).grid(row=i+4, column=2, padx=10, pady=10)
 
         self.change_bg_to_white(self.fc_frame)
         self.change_bg_to_white(self.fc_value_frame)
 
 
-    def convert_stdev_to_confidence(self, mu, sigma):
-        if sigma / mu > 0.25:
+    def convert_stdev_to_confidence(self):
+        if self.game.fc.loc[self.game.curr_dfd, ] > 0.25:
             return 'low'
-        elif sigma / mu > 0.1:
+        elif self.game.fc.loc[self.game.curr_dfd, ] > 0.1:
             return 'medium'
         else:
             return 'high'
@@ -573,7 +592,7 @@ class GUI():
     def build_reserve_frame(self):
         self.rsv_frame = tk.Frame(self.right_frame)
         self.rsv_frame.grid(row=0, column=0, sticky='N S E W')
-        self.rsv_frame.rowconfigure((0,1,2), weight=1)
+        self.rsv_frame.rowconfigure((0,1,2,3), weight=1)
         self.rsv_frame.columnconfigure((0,1,2), weight=1)
 
         if self.game.curr_dfd > 0:
@@ -631,7 +650,10 @@ class GUI():
             text=f'{self.dfdsim.arr} {lb_people} wanted to book today, \nand you reserved {self.rsv} seat{rsv_s}. \n\nYou sold {self.dfdsim.lb} seat{lb_s} and earned ${self.dfdsim.rev:,}.', padx=5, pady=5, bg='lightblue')
         self.outcome_label.grid(row=1, column=0, columnspan=3, padx=5, pady=10)
 
-        # if dfd > 0, go to next dfd
+        if (not self.game.easy_mode) and self.game.curr_dfd > 0:
+            self.forecast_update_label = tk.Label(self.rsv_frame, text='The forecast will update as\nwe go to the next booking day.', padx=5, pady=5, bg='lightblue')
+            self.forecast_update_label.grid(row=2, column=0, columnspan=3, padx=5, pady=10)
+
         self.next_image = ImageTk.PhotoImage(Image.open('images/next.png').resize((80,80), resample=5))
 
         if self.game.curr_dfd > 0:
@@ -649,7 +671,7 @@ class GUI():
                 bg='white', command=next_command)
 
         self.next_image_button.image = self.next_image
-        self.next_image_button.grid(row=2, column=0, columnspan=3, pady=10)
+        self.next_image_button.grid(row=3, column=0, columnspan=3, pady=10)
         
 
     def go_to_next_dfd(self):
@@ -672,11 +694,17 @@ class GUI():
         self.dep_frame = tk.Frame(self.right_frame)
         self.dep_frame.grid(row=0, column=0, sticky='N S E W')
         self.dep_frame.rowconfigure((0,1,2), weight=1)
-        self.dep_frame.columnconfigure(0, weight=1)
+        self.dep_frame.columnconfigure((0,1), weight=1)
 
         self.game.noshows = self.game.simulate_noshows()
         self.game.total_lb -= self.game.noshows
         self.game.dbs = max(0, self.game.total_lb - self.game.ac)
+
+        self.dep_image_path = 'images/departure.png'
+        self.dep_image = ImageTk.PhotoImage(Image.open(self.dep_image_path).resize((120,120), resample=5))
+        self.dep_image_label = tk.Label(self.dep_frame, image=self.dep_image)
+        self.dep_image_label.image = self.dep_image
+        self.dep_image_label.grid(row=0, column=0, pady=10)
 
         noshow_people = (lambda x: 'person' if x == 1 else 'people') (self.game.noshows)
         db_people = (lambda x: 'person' if x == 1 else 'people') (self.game.dbs)
@@ -686,7 +714,7 @@ class GUI():
         else:
             dep_msg += 'No need for volunteers.'
         self.dep_label = tk.Label(self.dep_frame, text=dep_msg, bg='lightblue')
-        self.dep_label.grid(row=0, column=0, padx=5, pady=10)
+        self.dep_label.grid(row=0, column=1, padx=5, pady=10)
 
         if self.game.dbs > 0:
             next_text = 'Compensate DBs'
@@ -697,7 +725,7 @@ class GUI():
         self.next_image_button = tk.Button(self.dep_frame, text=next_text, image=self.next_image, compound='top', height=120, width=120, 
                 bg='white', command=next_command)
         self.next_image_button.image = self.next_image
-        self.next_image_button.grid(row=2, column=0, pady=10)
+        self.next_image_button.grid(row=2, column=0, pady=10, columnspan=2)
 
         self.change_bg_to_white(self.left_frame)
         self.change_bg_to_white(self.right_frame)
@@ -747,18 +775,13 @@ class GUI():
         # self.fc_frame.destroy()
         # self.stats_frame.destroy()
         self.build_stats_frame('end')
-        self.build_leaderboard_frame(which='end')
+        self.build_end_leaderboard_frame()
 
 
-    def build_leaderboard_frame(self, which):
-        if which == 'end':
-            self.leaderboard_frame = tk.Frame(self.right_frame)
-            self.leaderboard_frame.grid(row=0, column=0, sticky='N S E W', pady=10)
-            self.results_df = self.game_db.get_some_results(which_game=self.game.game_type)
-        elif which == 'home':
-            self.leaderboard_frame = tk.Frame(self.home, relief='groove', borderwidth=5, bg='white', padx=10, pady=10)
-            self.leaderboard_frame.grid(row=0, column=1, sticky='N S E W')
-            self.results_df = self.game_db.get_all_results()
+    def build_end_leaderboard_frame(self):
+        self.leaderboard_frame = tk.Frame(self.right_frame)
+        self.leaderboard_frame.grid(row=0, column=0, sticky='N S E W', pady=10)
+        self.results_df = self.game_db.get_some_results(which_game=self.game.game_type)
 
         self.leaderboard_frame.rowconfigure(1, weight=1)
         self.leaderboard_frame.columnconfigure(0, weight=1)
@@ -779,50 +802,92 @@ class GUI():
         self.lb_label_3.grid(row=0, column=2, padx=5, pady=10)  # game
         self.lb_label_4.grid(row=0, column=3, padx=5, pady=10)  # revenue
 
-        if which == 'end':
-            # create and place leaderboard values
-            player_on_leaderboard = False
+        player_on_leaderboard = False
 
-            def add_this_player():
-                tk.Label(self.lb_value_frame, text=self.game.player, fg='#0033A0', font=self.label_font).grid(row=i+1, column=0, padx=5, pady=5)
-                tk.Label(self.lb_value_frame, text=self.game.location, fg='#0033A0', font=self.label_font).grid(row=i+1, column=1, padx=5, pady=5)
-                tk.Label(self.lb_value_frame, text=self.game.game_type, fg='#0033A0', font=self.label_font).grid(row=i+1, column=2, padx=5, pady=5)
-                tk.Label(self.lb_value_frame, text=f'${self.game.total_rev:,}', fg='#0033A0').grid(row=i+1, column=3, padx=5, pady=5)
+        def add_this_player():
+            tk.Label(self.lb_value_frame, text=self.game.player, fg='#0033A0', font=self.label_font).grid(row=i+1, column=0, padx=5, pady=5)
+            tk.Label(self.lb_value_frame, text=self.game.location, fg='#0033A0', font=self.label_font).grid(row=i+1, column=1, padx=5, pady=5)
+            tk.Label(self.lb_value_frame, text=self.game.game_type, fg='#0033A0', font=self.label_font).grid(row=i+1, column=2, padx=5, pady=5)
+            tk.Label(self.lb_value_frame, text=f'${self.game.total_rev:,}', fg='#0033A0').grid(row=i+1, column=3, padx=5, pady=5)
 
-            for i in range(min(10, len(self.results_df))):
-                if (self.results_df.loc[i, 'revenue'] > self.game.total_rev) or player_on_leaderboard:
-                    tk.Label(self.lb_value_frame, text=self.results_df.loc[i, 'name']).grid(row=i+1, column=0, padx=5, pady=5)
-                    tk.Label(self.lb_value_frame, text=self.results_df.loc[i, 'location']).grid(row=i+1, column=1, padx=5, pady=5)
-                    tk.Label(self.lb_value_frame, text=self.results_df.loc[i, 'game']).grid(row=i+1, column=2, padx=5, pady=5)
-                    tk.Label(self.lb_value_frame, text=f'${self.results_df.loc[i, "revenue"]:,}').grid(row=i+1, column=3, padx=5, pady=5)
-                else:
-                    player_on_leaderboard = True
-                    add_this_player()
-            
-            if not player_on_leaderboard:
-                i += 1
-                tk.Label(self.lb_value_frame, text='-----').grid(row=i+1, column=0, padx=5, pady=5)
-                tk.Label(self.lb_value_frame, text='-----').grid(row=i+1, column=1, padx=5, pady=5)
-                tk.Label(self.lb_value_frame, text='-----').grid(row=i+1, column=2, padx=5, pady=5)
-                tk.Label(self.lb_value_frame, text='-----').grid(row=i+1, column=3, padx=5, pady=5)
-                i += 1
-                add_this_player()
-
-            self.change_bg_to_white(self.right_frame)
-            self.change_bg_to_white(self.leaderboard_frame)
-            self.change_bg_to_white(self.lb_value_frame)
-
-        elif which == 'home':
-            for i in range(min(10, len(self.results_df))):
+        for i in range(min(10, len(self.results_df))):
+            if (self.results_df.loc[i, 'revenue'] > self.game.total_rev) or player_on_leaderboard:
                 tk.Label(self.lb_value_frame, text=self.results_df.loc[i, 'name']).grid(row=i+1, column=0, padx=5, pady=5)
                 tk.Label(self.lb_value_frame, text=self.results_df.loc[i, 'location']).grid(row=i+1, column=1, padx=5, pady=5)
                 tk.Label(self.lb_value_frame, text=self.results_df.loc[i, 'game']).grid(row=i+1, column=2, padx=5, pady=5)
                 tk.Label(self.lb_value_frame, text=f'${self.results_df.loc[i, "revenue"]:,}').grid(row=i+1, column=3, padx=5, pady=5)
+            else:
+                player_on_leaderboard = True
+                add_this_player()
+        
+        if not player_on_leaderboard:
+            i += 1
+            tk.Label(self.lb_value_frame, text='-----').grid(row=i+1, column=0, padx=5, pady=5)
+            tk.Label(self.lb_value_frame, text='-----').grid(row=i+1, column=1, padx=5, pady=5)
+            tk.Label(self.lb_value_frame, text='-----').grid(row=i+1, column=2, padx=5, pady=5)
+            tk.Label(self.lb_value_frame, text='-----').grid(row=i+1, column=3, padx=5, pady=5)
+            i += 1
+            add_this_player()
 
-            self.change_bg_to_white(self.home)
-            self.change_bg_to_white(self.leaderboard_frame)
-            self.change_bg_to_white(self.lb_value_frame)
+        self.change_bg_to_white(self.right_frame)
+        self.change_bg_to_white(self.leaderboard_frame)
+        self.change_bg_to_white(self.lb_value_frame)
 
+        # elif which == 'home':
+        #     for i in range(min(10, len(self.results_df))):
+        #         tk.Label(self.lb_value_frame, text=self.results_df.loc[i, 'name']).grid(row=i+1, column=0, padx=5, pady=5)
+        #         tk.Label(self.lb_value_frame, text=self.results_df.loc[i, 'location']).grid(row=i+1, column=1, padx=5, pady=5)
+        #         tk.Label(self.lb_value_frame, text=self.results_df.loc[i, 'game']).grid(row=i+1, column=2, padx=5, pady=5)
+        #         tk.Label(self.lb_value_frame, text=f'${self.results_df.loc[i, "revenue"]:,}').grid(row=i+1, column=3, padx=5, pady=5)
+
+        #     self.change_bg_to_white(self.home)
+        #     self.change_bg_to_white(self.leaderboard_frame)
+        #     self.change_bg_to_white(self.lb_value_frame)
+
+
+    def build_home_leaderboard_frame(self):
+        self.leaderboard_frame = tk.Frame(self.home, relief='groove', borderwidth=5, bg='white', padx=10, pady=10)
+        self.leaderboard_frame.grid(row=0, column=1, sticky='N S E W')
+        self.results_df = self.game_db.get_all_results()
+
+        self.leaderboard_frame.rowconfigure(1, weight=1)
+        self.leaderboard_frame.columnconfigure(0, weight=1)
+
+        self.lb_header = tk.Label(self.leaderboard_frame, text='Leaderboard', font=self.header_font)
+        self.lb_header.grid(row=0, column=0, padx=5)
+
+        self.lb1_frame = tk.Frame(self.leaderboard_frame)
+        self.lb1_frame.grid(row=0, column=0, padx=5, pady=5, sticky='N S E W')
+        self.lb2_frame = tk.Frame(self.leaderboard_frame)
+        self.lb2_frame.grid(row=0, column=1, padx=5, pady=5, sticky='N S E W')
+        self.lb3_frame = tk.Frame(self.leaderboard_frame)
+        self.lb3_frame.grid(row=1, column=0, padx=5, pady=5, sticky='N S E W')
+        self.lb4_frame = tk.Frame(self.leaderboard_frame)
+        self.lb4_frame.grid(row=1, column=1, padx=5, pady=5, sticky='N S E W')
+        self.lb5_frame = tk.Frame(self.leaderboard_frame)
+        self.lb5_frame.grid(row=2, column=0, padx=5, pady=5, sticky='N S E W')
+        self.lb6_frame = tk.Frame(self.leaderboard_frame)
+        self.lb6_frame.grid(row=2, column=1, padx=5, pady=5, sticky='N S E W')
+
+        frames = [self.lb1_frame, self.lb2_frame, self.lb3_frame, self.lb4_frame, self.lb5_frame, self.lb6_frame]
+
+        for i, frame in enumerate(frames):
+            tk.Label(frame, text='Name', font=self.label_font).grid(row=0, column=0, padx=5, pady=10, sticky='N')
+            tk.Label(frame, text='From', font=self.label_font).grid(row=0, column=1, padx=5, pady=10, sticky='N')
+            tk.Label(frame, text='Game', font=self.label_font).grid(row=0, column=2, padx=5, pady=10, sticky='N')
+            tk.Label(frame, text='Revenue', font=self.label_font).grid(row=0, column=3, padx=5, pady=10, sticky='N')
+
+            these_results = self.results_df[self.results_df['game'] == scenario_dict[i+1]['name']]
+
+            for j in range(min(3, len(these_results))):
+                tk.Label(frame, text=these_results.iloc[j, 1]).grid(row=j+1, column=0, padx=5, pady=5)
+                tk.Label(frame, text=these_results.iloc[j, 2]).grid(row=j+1, column=1, padx=5, pady=5)
+                lb_image_path = scenario_dict[i+1]['image']
+                lb_image = ImageTk.PhotoImage(Image.open(lb_image_path).resize((25,25), resample=5))
+                lb_image_label = tk.Label(frame, image=lb_image)
+                lb_image_label.image = lb_image
+                lb_image_label.grid(row=j+1, column=2, padx=5, pady=5)
+                tk.Label(frame, text=f"${these_results.iloc[j, 4]:,}").grid(row=j+1, column=3, padx=5, pady=5)
 
     # def get_results(self, which):
     #     if which == 'end':

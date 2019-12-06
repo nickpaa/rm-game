@@ -76,16 +76,18 @@ class DFDSimulation():
         self.game.sa -= self.lb
 
     def update_demand(self):
-        if not self.game.easy_mode:
-            self.game.fc['a'] = (self.game.fc[:, 'demand'] ** 2) / (self.game.fc[:, 'stdev'] ** 2)
-            self.game.fc['scale'] = (self.game.fc[:, 'stdev'] ** 2) / self.game.fc[:, 'demand']
-            self.game.fc['updated_demand'] = int(gamma.rvs(a=self.game.fc['a'], scale=self.game.fc['scale']))
-
+        self.game.fc['a'] = (self.game.fc.loc[:, 'demand'] ** 2) / (self.game.fc.loc[:, 'stdev'] ** 2)
+        self.game.fc['scale'] = (self.game.fc.loc[:, 'stdev'] ** 2) / self.game.fc.loc[:, 'demand']
+        self.game.fc['demand'] = gamma.rvs(a=self.game.fc.loc[:, 'a'], scale=self.game.fc.loc[:, 'scale']).astype(int)
+        self.game.fc['stdev'] = self.game.fc.loc[:, 'demand'] * self.game.fc.loc[:, 'cv']
 
     def dfd_cleanup(self):
-        self.game.fc.drop(self.dfd, axis=0, inplace=True)
+        self.game.fc.drop(self.game.curr_dfd, axis=0, inplace=True)
         self.game.curr_dfd -= 1
         if self.game.curr_dfd >= 0:
+            if not self.game.easy_mode:
+                self.update_demand()
+                self.game.fc.loc[:, 'cv'] -= 0.05
             self.game.curr_dow_long = self.game.fc.loc[self.game.curr_dfd, 'dow_long']
             self.game.curr_dow_short = self.game.fc.loc[self.game.curr_dfd, 'dow_short']
 
@@ -95,6 +97,15 @@ if __name__ == '__main__':
     g = RealGame(RealScenario(scenario_dict[1]))
     d = DFDSimulation(g, 4)
     print(d.game.fc)
-    d.update_demand()
-    print('updated')
+    d.dfd_cleanup()
+    print('dfd 3')
+    print(d.game.fc)
+    d.dfd_cleanup()
+    print('dfd 2')
+    print(d.game.fc)
+    d.dfd_cleanup()
+    print('dfd 1')
+    print(d.game.fc)
+    d.dfd_cleanup()
+    print('dfd 0')
     print(d.game.fc)
