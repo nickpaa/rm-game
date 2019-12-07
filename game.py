@@ -7,6 +7,7 @@ class Game():
 
     def __init__(self, scenario):
         self.game_type = scenario.name
+        self.game_image_path = scenario.image_path
 
         self.ndfd = scenario.ndfd
         self.fc = scenario.fc

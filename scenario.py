@@ -52,6 +52,7 @@ class Scenario():
         self.fc['stdev'] = self.fc['demand'] * self.fc['cv']
         self.ndfd = len(self.fc) - 1
         self.ac = sc_dict['ac']
+        self.image_path = sc_dict['image']
 
 
 class EasyScenario(Scenario):
@@ -69,7 +70,7 @@ class RealScenario(Scenario):
         
 
 scenario_dict = {
-    0: {'name':'Easy mode', 'fc':EASY_FCDATA, 'ac':EASY_AC},
+    0: {'name':'Easy mode', 'image':'images/100.png', 'fc':EASY_FCDATA, 'ac':EASY_AC},
     1: {'name':'SFO', 'image':'images/bridge.png', 'fc':REAL1_FCDATA, 'ac':REAL1_AC, 'ns':REAL1_NSRATE, 'db':DB_HIGH},
     2: {'name':'IAH', 'image':'images/oil.png', 'fc':REAL2_FCDATA, 'ac':REAL2_AC, 'ns':REAL2_NSRATE, 'db':DB_LOW},
     3: {'name':'NRT', 'image':'images/cherry.png', 'fc':REAL2_FCDATA, 'ac':REAL2_AC, 'ns':REAL2_NSRATE, 'db':DB_LOW},
