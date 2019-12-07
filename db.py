@@ -48,6 +48,14 @@ class GameDB():
         conn = self.create_connection()
         return read_sql_query(f"SELECT * FROM results where game = '{which_game}' ORDER BY revenue desc, gametime desc", conn)
 
+    def get_todays_results(self):
+        conn = self.create_connection()
+        return read_sql_query("SELECT * FROM results where gametime >= date('now') ORDER BY revenue desc, gametime desc", conn)
+
+    def get_some_of_todays_results(self, which_game):
+        conn = self.create_connection()
+        return read_sql_query(f"SELECT * FROM results where game = '{which_game}' and gametime >= date('now') ORDER BY revenue desc, gametime desc", conn)
+
     def drop_results(self):
         conn = self.create_connection()
         cur = conn.cursor()

@@ -128,7 +128,7 @@ class GUI():
     def build_home_leaderboard(self):
         self.player_frame.destroy()
         self.button_frame.destroy()
-        self.build_home_leaderboard_frame()
+        self.build_home_leaderboard_frame(when='all')
         self.build_leaderboard_option_frame()
 
 
@@ -142,22 +142,23 @@ class GUI():
 
         self.all_leaders_button = tk.Button(self.leaderboard_option_frame, text='All-time leaders', fg='#0033A0', command=self.switch_lb_to_all)
         self.all_leaders_button.grid(row=0, column=0, padx=10, pady=10)
-        self.all_leaders_button['state'] = 'disabled'
+        # self.all_leaders_button['state'] = 'disabled'
 
         self.todays_leaders_button = tk.Button(self.leaderboard_option_frame, text='Today\'s leaders', fg='#0033A0', command=self.switch_lb_to_today)
         self.todays_leaders_button.grid(row=0, column=1, padx=10, pady=10)
-        self.todays_leaders_button['state'] = 'disabled'
+        # self.todays_leaders_button['state'] = 'disabled'
 
         self.main_menu_button = tk.Button(self.leaderboard_option_frame, text='Main menu', fg='#0033A0', command=self.rebuild_home_from_home)
         self.main_menu_button.grid(row=0, column=2, padx=10, pady=10)
 
 
-    def switch_lb_to_all():
-        pass
+    def switch_lb_to_all(self):
+        self.leaderboard_frame.destroy()
+        self.build_home_leaderboard_frame(when='all')
 
-    def switch_lb_to_today():
-        pass
-
+    def switch_lb_to_today(self):
+        self.leaderboard_frame.destroy()
+        self.build_home_leaderboard_frame(when='today')
 
     def rebuild_home_from_home(self):
         self.home.destroy()
@@ -725,7 +726,7 @@ class GUI():
         self.next_image_button = tk.Button(self.dep_frame, text=next_text, image=self.next_image, compound='top', height=120, width=120, 
                 bg='white', command=next_command)
         self.next_image_button.image = self.next_image
-        self.next_image_button.grid(row=2, column=0, pady=10, columnspan=2)
+        self.next_image_button.grid(row=2, column=0, columnspan=2, pady=10)
 
         self.change_bg_to_white(self.left_frame)
         self.change_bg_to_white(self.right_frame)
@@ -744,14 +745,20 @@ class GUI():
             self.db_comp_msg = f'There were limited\nalternative flights,\nand you paid ${self.game.db_cost:,}\nper denied boarding.'
         else:
             self.db_comp_msg = f'Ouch! No one was flexible\nwith their travel plans,\nand you had to pay ${self.game.db_cost:,}\nper denied boarding.'
+        
+        self.dep_label.destroy()
+        
         self.db_outcome_label = tk.Label(self.dep_frame, text=self.db_comp_msg, padx=5, pady=5, bg='lightblue')
         self.db_outcome_label.grid(row=1, column=0, padx=5, pady=10)
+
+        self.next_image_button.destroy()
 
         self.next_image_button = tk.Button(self.dep_frame, text='See results', image=self.next_image, compound='top', height=120, width=120, 
                 bg='white', command=self.end_game)
         self.next_image_button.image = self.next_image
         self.next_image_button.grid(row=2, column=0, pady=10)
 
+        self.dep_frame.columnconfigure(0, weight=1)
 
     def end_game(self):
         self.add_results_to_db()
@@ -775,18 +782,29 @@ class GUI():
         # self.fc_frame.destroy()
         # self.stats_frame.destroy()
         self.build_stats_frame('end')
-        self.build_end_leaderboard_frame()
+
+        self.leaderboard_outer_frame = tk.Frame(self.right_frame)
+        self.leaderboard_outer_frame.grid(row=0, column=0, sticky='N S E W', pady=10)
+        self.leaderboard_outer_frame.columnconfigure((0,1), weight=1)
+        self.build_end_leaderboard_frame(which='today')
+        self.build_end_leaderboard_frame(which='all')
 
 
-    def build_end_leaderboard_frame(self):
-        self.leaderboard_frame = tk.Frame(self.right_frame)
-        self.leaderboard_frame.grid(row=0, column=0, sticky='N S E W', pady=10)
-        self.results_df = self.game_db.get_some_results(which_game=self.game.game_type)
+    def build_end_leaderboard_frame(self, which):
+        if which == 'today':
+            self.leaderboard_frame = tk.Frame(self.leaderboard_outer_frame, relief='groove', borderwidth=5, bg='white', padx=10, pady=10)
+            self.leaderboard_frame.grid(row=0, column=0, sticky='N S E W')
+            self.results_df = self.game_db.get_some_of_todays_results(which_game=self.game.game_type)
+            self.lb_header = tk.Label(self.leaderboard_frame, text='Today\'s leaderboard', font=self.header_font)
+        elif which == 'all':
+            self.leaderboard_frame = tk.Frame(self.leaderboard_outer_frame, relief='groove', borderwidth=5, bg='white', padx=10, pady=10)
+            self.leaderboard_frame.grid(row=0, column=1, sticky='N S E W')
+            self.results_df = self.game_db.get_some_results(which_game=self.game.game_type)
+            self.lb_header = tk.Label(self.leaderboard_frame, text='All-time leaderboard', font=self.header_font)
 
         self.leaderboard_frame.rowconfigure(1, weight=1)
-        self.leaderboard_frame.columnconfigure(0, weight=1)
+        self.leaderboard_frame.columnconfigure((0,1), weight=1)
 
-        self.lb_header = tk.Label(self.leaderboard_frame, text='Leaderboard', font=self.header_font)
         self.lb_header.grid(row=0, column=0, padx=5)
 
         self.lb_value_frame = tk.Frame(self.leaderboard_frame)
@@ -830,44 +848,40 @@ class GUI():
             add_this_player()
 
         self.change_bg_to_white(self.right_frame)
+        self.change_bg_to_white(self.leaderboard_outer_frame)
         self.change_bg_to_white(self.leaderboard_frame)
         self.change_bg_to_white(self.lb_value_frame)
 
-        # elif which == 'home':
-        #     for i in range(min(10, len(self.results_df))):
-        #         tk.Label(self.lb_value_frame, text=self.results_df.loc[i, 'name']).grid(row=i+1, column=0, padx=5, pady=5)
-        #         tk.Label(self.lb_value_frame, text=self.results_df.loc[i, 'location']).grid(row=i+1, column=1, padx=5, pady=5)
-        #         tk.Label(self.lb_value_frame, text=self.results_df.loc[i, 'game']).grid(row=i+1, column=2, padx=5, pady=5)
-        #         tk.Label(self.lb_value_frame, text=f'${self.results_df.loc[i, "revenue"]:,}').grid(row=i+1, column=3, padx=5, pady=5)
 
-        #     self.change_bg_to_white(self.home)
-        #     self.change_bg_to_white(self.leaderboard_frame)
-        #     self.change_bg_to_white(self.lb_value_frame)
-
-
-    def build_home_leaderboard_frame(self):
+    def build_home_leaderboard_frame(self, when):
         self.leaderboard_frame = tk.Frame(self.home, relief='groove', borderwidth=5, bg='white', padx=10, pady=10)
         self.leaderboard_frame.grid(row=0, column=1, sticky='N S E W')
-        self.results_df = self.game_db.get_all_results()
+        if when == 'today':
+            self.results_df = self.game_db.get_todays_results()
+        elif when == 'all':
+            self.results_df = self.game_db.get_all_results()
 
         self.leaderboard_frame.rowconfigure(1, weight=1)
         self.leaderboard_frame.columnconfigure(0, weight=1)
 
-        self.lb_header = tk.Label(self.leaderboard_frame, text='Leaderboard', font=self.header_font)
-        self.lb_header.grid(row=0, column=0, padx=5)
+        if when =='today':
+            self.lb_header = tk.Label(self.leaderboard_frame, text='Today\'s leaderboard', font=self.header_font)
+        elif when =='all':
+            self.lb_header = tk.Label(self.leaderboard_frame, text='All-time leaderboard', font=self.header_font)
+        self.lb_header.grid(row=0, column=0, columnspan=2, padx=5)
 
         self.lb1_frame = tk.Frame(self.leaderboard_frame)
-        self.lb1_frame.grid(row=0, column=0, padx=5, pady=5, sticky='N S E W')
+        self.lb1_frame.grid(row=1, column=0, padx=5, pady=5, sticky='N S E W')
         self.lb2_frame = tk.Frame(self.leaderboard_frame)
-        self.lb2_frame.grid(row=0, column=1, padx=5, pady=5, sticky='N S E W')
+        self.lb2_frame.grid(row=1, column=1, padx=5, pady=5, sticky='N S E W')
         self.lb3_frame = tk.Frame(self.leaderboard_frame)
-        self.lb3_frame.grid(row=1, column=0, padx=5, pady=5, sticky='N S E W')
+        self.lb3_frame.grid(row=2, column=0, padx=5, pady=5, sticky='N S E W')
         self.lb4_frame = tk.Frame(self.leaderboard_frame)
-        self.lb4_frame.grid(row=1, column=1, padx=5, pady=5, sticky='N S E W')
+        self.lb4_frame.grid(row=2, column=1, padx=5, pady=5, sticky='N S E W')
         self.lb5_frame = tk.Frame(self.leaderboard_frame)
-        self.lb5_frame.grid(row=2, column=0, padx=5, pady=5, sticky='N S E W')
+        self.lb5_frame.grid(row=3, column=0, padx=5, pady=5, sticky='N S E W')
         self.lb6_frame = tk.Frame(self.leaderboard_frame)
-        self.lb6_frame.grid(row=2, column=1, padx=5, pady=5, sticky='N S E W')
+        self.lb6_frame.grid(row=3, column=1, padx=5, pady=5, sticky='N S E W')
 
         frames = [self.lb1_frame, self.lb2_frame, self.lb3_frame, self.lb4_frame, self.lb5_frame, self.lb6_frame]
 
