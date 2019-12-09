@@ -1,6 +1,7 @@
 from pandas import DataFrame
 from scipy.stats import gamma, binom
-from random import choices
+from random import choices, sample
+from event import *
 
 
 class Game():
@@ -42,6 +43,7 @@ class RealGame(Game):
         self.easy_mode = False
         self.ns_rate = scenario.ns_rate
         self.db_costs = scenario.db_costs
+        self.events = scenario.events
 
     def simulate_noshows(self):
         return binom.rvs(n=self.total_lb, p=self.ns_rate)
@@ -92,21 +94,35 @@ class DFDSimulation():
             self.game.curr_dow_long = self.game.fc.loc[self.game.curr_dfd, 'dow_long']
             self.game.curr_dow_short = self.game.fc.loc[self.game.curr_dfd, 'dow_short']
 
+    def select_random_event(self):
+        self.random_event = sample(self.game.events, 1)[0]
+        self.game.events.remove(self.random_event)
+        if self.random_event:
+            self.dfd_event = self.random_event(self.game)
+            self.dfd_event.apply_event()
+        else:
+            self.dfd_event = None
+
 
 if __name__ == '__main__':
     from scenario import *
     g = RealGame(RealScenario(scenario_dict[1]))
     d = DFDSimulation(g, 4)
-    print(d.game.fc)
+    print(f'dfd {g.curr_dfd}')
+    # print(f'ac: {d.game.ac}')
     d.dfd_cleanup()
-    print('dfd 3')
-    print(d.game.fc)
+    d.select_random_event()
+    if d.random_event: 
+        print(f'applying event {d.dfd_event.name}')
+    else:
+        print('no event')
+    print(f'dfd {g.curr_dfd}')
+    # print(f'ac: {d.game.ac}')
     d.dfd_cleanup()
-    print('dfd 2')
-    print(d.game.fc)
-    d.dfd_cleanup()
-    print('dfd 1')
-    print(d.game.fc)
-    d.dfd_cleanup()
-    print('dfd 0')
-    print(d.game.fc)
+    d.select_random_event()
+    if d.random_event: 
+        print(f'applying event {d.dfd_event.name}')
+    else:
+        print('no event')
+    print(f'dfd {g.curr_dfd}')
+    # print(f'ac: {d.game.ac}')

@@ -30,6 +30,7 @@ class GUI():
         self.entry_font.configure(family='Helvetica', size='12')
         self.header_font = Font(family='Helvetica', size='14', weight='bold')
         self.label_font = Font(family='Helvetica', size='12', weight='bold')
+        self.root.option_add('*Dialog.msg.font', 'Helvetica 18')
 
         self.game_db = GameDB(DB_PATH)
 
@@ -334,7 +335,7 @@ class GUI():
             self.ac_value.grid(row=0, column=1, sticky='E')
             # AU
             if not self.game.easy_mode:
-                self.au_label = tk.Label(self.seat_frame, text=f'With overbooking:', font=self.label_font)
+                self.au_label = tk.Label(self.seat_frame, text=f'Authorized with overbooking:', font=self.label_font)
                 self.au_value = tk.Label(self.seat_frame, text=f'{self.game.au}')
                 self.au_label.grid(row=1, column=0, sticky='W')
                 self.au_value.grid(row=1, column=1, sticky='E')
@@ -466,9 +467,9 @@ class GUI():
         self.ob_frame.rowconfigure((0,1,2), weight=1)
         self.ob_frame.columnconfigure((0,1,2), weight=1)
 
-        ob_msg = f'We know that, on average, \n{int(self.game.ns_rate * 100)}% of customers will not show up\nfor the flight, so we might overbook.\nHow many seats would you\nlike to overbook by?'
+        ob_msg = f'We know that, on average, {int(self.game.ns_rate * 100)}% of customers will not show up for the flight, so we might overbook. How many seats would you like to overbook by?'
         
-        self.ob_label = tk.Label(self.ob_frame, text=ob_msg)
+        self.ob_label = tk.Label(self.ob_frame, text=ob_msg, wraplengt=300)
         self.ob_label.grid(row=0, column=0, padx=5, pady=10)
 
         self.ob_value = tk.StringVar()
@@ -509,7 +510,7 @@ class GUI():
         self.check_button['state'] = 'disabled'
         
         self.new_au_label = tk.Label(self.ob_frame, 
-            text=f'OK. You\'ll sell up to {self.game.au} seats. \nAt the end, we\'ll see how many people no-show.', padx=5, pady=5, bg='lightblue')
+            text=f'OK. You\'ll sell up to {self.game.au} seats. At the end, we\'ll see how many people no-show.', padx=5, pady=5, bg='lightblue', wraplengt=300)
         self.new_au_label.grid(row=1, column=0, columnspan=3, padx=5, pady=10, sticky='E W')
 
         self.next_image = ImageTk.PhotoImage(Image.open('images/next.png').resize((80,80), resample=5))
@@ -535,11 +536,11 @@ class GUI():
         self.rsv_frame.columnconfigure((0,1,2), weight=1)
 
         if self.game.curr_dfd > 0:
-            rsv_msg = f'How many seats would\nyou like to reserve\ntoday at ${self.game.fc.loc[self.game.curr_dfd, "fare"]}?'
+            rsv_msg = f'How many seats would you like to reserve today at ${self.game.fc.loc[self.game.curr_dfd, "fare"]}?'
         else:
-            rsv_msg = f'The flight departs today,\nso you should reserve\nall remaining seats at ${self.game.fc.loc[self.game.curr_dfd, "fare"]}.'
+            rsv_msg = f'The flight departs today, so you should reserve all remaining seats at ${self.game.fc.loc[self.game.curr_dfd, "fare"]}.'
 
-        self.rsv_label = tk.Label(self.rsv_frame, text=rsv_msg)
+        self.rsv_label = tk.Label(self.rsv_frame, text=rsv_msg, wraplengt=300)
         self.rsv_label.grid(row=0, column=0, padx=5, pady=10)
 
         self.rsv_value = tk.StringVar()
@@ -548,7 +549,7 @@ class GUI():
         self.rsv_entry_funcid = self.rsv_entry.bind('<Return>', self.validate_reserve)
         self.rsv_entry.focus_set()
         if self.game.curr_dfd == 0:
-            self.rsv_entry.insert(0, self.game.sa)
+            self.rsv_entry.insert(0, max(self.game.sa, 0))
 
         self.check_image = ImageTk.PhotoImage(Image.open('images/check.png').resize((40,40), resample=5))
         self.check_button = tk.Button(self.rsv_frame, image=self.check_image)
@@ -563,12 +564,21 @@ class GUI():
         try:
             rsv = int(self.rsv_value.get())
         except ValueError:
-            tk.messagebox.showerror(title='Error', message=f'Reserve value must be an integer between 0 and {self.game.sa}.')
-        
-        if (rsv >= 0) and (rsv <= self.game.sa):
-            self.run_dfd()
+            if self.game.sa > 0:
+                tk.messagebox.showerror(title='Error', message=f'Reserve value must be an integer between 0 and {self.game.sa}.')
+            else:
+                tk.messagebox.showerror(title='Error', message=f'You have already sold the authorized number of seats, so you must reserve 0 seats.')
+
+        if (self.game.sa > 0):
+            if (rsv >= 0) and (rsv <= self.game.sa):
+                self.run_dfd()
+            else:
+                tk.messagebox.showerror(title='Error', message=f'Reserve value must be an integer between 0 and {self.game.sa}.')    
         else:
-            tk.messagebox.showerror(title='Error', message=f'Reserve value must be an integer between 0 and {self.game.sa}.')
+            if rsv == 0:
+                self.run_dfd()
+            else:
+                tk.messagebox.showerror(title='Error', message=f'You have already sold the authorized number of seats, so you must reserve 0 seats.')
 
 
     def run_dfd(self, event=None):
@@ -586,11 +596,13 @@ class GUI():
         lb_people = (lambda x: 'person' if x == 1 else 'people') (self.dfdsim.lb)
         
         self.outcome_label = tk.Label(self.rsv_frame, 
-            text=f'{self.dfdsim.arr} {lb_people} wanted to book today, \nand you reserved {self.rsv} seat{rsv_s}. \n\nYou sold {self.dfdsim.lb} seat{lb_s} and earned ${self.dfdsim.rev:,}.', padx=5, pady=5, bg='lightblue')
+            text=f'{self.dfdsim.arr} {lb_people} wanted to book today, and you reserved {self.rsv} seat{rsv_s}. \nYou sold {self.dfdsim.lb} seat{lb_s} and earned ${self.dfdsim.rev:,}.', 
+            padx=5, pady=5, bg='lightblue', wraplengt=300)
         self.outcome_label.grid(row=1, column=0, columnspan=3, padx=5, pady=10, sticky='E W')
 
         if (not self.game.easy_mode) and self.game.curr_dfd > 0:
-            self.forecast_update_label = tk.Label(self.rsv_frame, text='The forecast will update as\nwe go to the next booking day.', padx=5, pady=5, bg='lightblue')
+            self.forecast_update_label = tk.Label(self.rsv_frame, text='The forecast will update as we go to the next booking day.', 
+                padx=5, pady=5, bg='lightblue', wraplengt=300)
             self.forecast_update_label.grid(row=2, column=0, columnspan=3, padx=5, pady=10, sticky='E W')
 
         self.next_image = ImageTk.PhotoImage(Image.open('images/next.png').resize((80,80), resample=5))
@@ -615,8 +627,37 @@ class GUI():
 
     def go_to_next_dfd(self):
         self.dfdsim.dfd_cleanup()
+        if not self.game.easy_mode:
+            self.dfdsim.select_random_event()
+            if self.dfdsim.dfd_event:
+                print(f'applying event {self.dfdsim.dfd_event.name}')
+                self.display_event_message()
+            else:
+                print('no event')
         self.main.destroy()
         self.build_game()
+
+
+    def display_event_message(self):
+        # self.event_message = tk.messagebox.showinfo(title=self.dfdsim.dfd_event.name, message=self.dfdsim.dfd_event.message)
+        self.event_box = tk.Toplevel(padx=10, pady=10)
+        self.event_box.grab_set()
+        # self.event_box.title = self.dfdsim.dfd_event.name
+        
+        self.event_box_title = tk.Label(self.event_box, text=self.dfdsim.dfd_event.name, font=self.label_font, padx=10, pady=10)
+        self.event_box_message = tk.Label(self.event_box, text=self.dfdsim.dfd_event.message, font=self.default_font, wraplengt=300, padx=10, pady=10)
+        self.ok_button = tk.Button(self.event_box, text='OK', command=self.dismiss_event_message, padx=10,  pady=5)
+
+        # self.event_box_message.grid(self.event_box, row=0, column=0)
+        # self.ok_button.grid(self.event_box, row=1, column=0)
+        self.event_box_title.pack()
+        self.event_box_message.pack()
+        self.ok_button.pack()
+
+
+    def dismiss_event_message(self):
+        self.event_box.grab_release()
+        self.event_box.destroy()
 
 
     def build_departure_frame(self):
@@ -646,12 +687,12 @@ class GUI():
 
         noshow_people = (lambda x: 'person' if x == 1 else 'people') (self.game.noshows)
         db_people = (lambda x: 'person' if x == 1 else 'people') (self.game.dbs)
-        dep_msg = f'At departure, {self.game.noshows} {noshow_people} no-showed,\nso there are {self.game.total_lb} people\nfor {self.game.ac} seats.\n'
+        dep_msg = f'At departure, {self.game.noshows} {noshow_people} no-showed, so there are {self.game.total_lb} people for {self.game.ac} seats.'
         if self.game.dbs > 0:
-            dep_msg += f'\n\nYou\'ll need to offer\nDB compensation to {self.game.dbs} {db_people}.'
+            dep_msg += f'\n\nYou\'ll need to offer DB compensation to {self.game.dbs} {db_people}.'
         else:
-            dep_msg += 'No need for volunteers.'
-        self.dep_label = tk.Label(self.dep_frame, text=dep_msg, bg='lightblue')
+            dep_msg += '\n\nNo need for volunteers.'
+        self.dep_label = tk.Label(self.dep_frame, text=dep_msg, bg='lightblue', wraplengt=300)
         self.dep_label.grid(row=1, column=0, padx=5, pady=10, sticky='N S E W')
 
         if self.game.dbs > 0:
@@ -676,15 +717,15 @@ class GUI():
         self.game.total_rev -= self.game.total_db_cost
 
         if self.game.db_cost <= 250:
-            self.db_comp_msg = f'You got lucky. There were\nplenty of other options,\nand you only paid ${self.game.db_cost:,}\nper denied boarding.'
+            self.db_comp_msg = f'You got lucky. There were plenty of other options, and you only paid ${self.game.db_cost:,} per denied boarding.'
         elif self.game.db_cost <= 1000:
-            self.db_comp_msg = f'There were limited\nalternative flights,\nand you paid ${self.game.db_cost:,}\nper denied boarding.'
+            self.db_comp_msg = f'There were limited alternative flights, and you paid ${self.game.db_cost:,} per denied boarding.'
         else:
-            self.db_comp_msg = f'Ouch! No one was flexible\nwith their travel plans,\nand you had to pay ${self.game.db_cost:,}\nper denied boarding.'
+            self.db_comp_msg = f'Ouch! No one was flexible with their travel plans, and you had to pay ${self.game.db_cost:,} per denied boarding.'
         
         self.dep_label.destroy()
         
-        self.db_outcome_label = tk.Label(self.dep_frame, text=self.db_comp_msg, padx=5, pady=5, bg='lightblue')
+        self.db_outcome_label = tk.Label(self.dep_frame, text=self.db_comp_msg, padx=5, pady=5, bg='lightblue', wraplengt=300)
         self.db_outcome_label.grid(row=1, column=0, padx=5, pady=10, sticky='N S E W')
 
         self.next_image_button.destroy()
@@ -845,6 +886,7 @@ class GUI():
             lb_image_label.grid(row=i+1, column=2, padx=5, pady=5)
             tk.Label(self.lb_value_frame, text=f'${self.game.total_rev:,}', fg='#0033A0').grid(row=i+1, column=3, padx=5, pady=5)
 
+        i = 0
         for i in range(min(10, len(self.results_df))):
             if (self.results_df.loc[i, 'revenue'] > self.game.total_rev) or player_on_leaderboard:
                 tk.Label(self.lb_value_frame, text=self.results_df.loc[i, 'name']).grid(row=i+1, column=0, padx=5, pady=5)
