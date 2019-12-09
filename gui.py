@@ -30,7 +30,7 @@ class GUI():
         self.entry_font.configure(family='Helvetica', size='12')
         self.header_font = Font(family='Helvetica', size='14', weight='bold')
         self.label_font = Font(family='Helvetica', size='12', weight='bold')
-        self.root.option_add('*Dialog.msg.font', 'Helvetica 18')
+        # self.root.option_add('*Dialog.msg.font', 'Helvetica 18')
 
         self.game_db = GameDB(DB_PATH)
 
@@ -440,8 +440,8 @@ class GUI():
                 tk.Label(self.fc_value_frame, text=self.game.fc.loc[dfd, 'demand']).grid(row=i+2, column=2, padx=10, pady=10)
             else:
                 tk.Label(self.fc_value_frame, text=self.game.fc.loc[dfd, 'demand']).grid(row=i+2, column=2, padx=10, pady=10)
-                range_low = int(self.game.fc.loc[dfd, 'demand'] - 2 * self.game.fc.loc[dfd, 'stdev'])
-                range_high = int(self.game.fc.loc[dfd, 'demand'] + 2 * self.game.fc.loc[dfd, 'stdev'])
+                range_low = max(int(self.game.fc.loc[dfd, 'demand'] - 2 * self.game.fc.loc[dfd, 'stdev']), 0)
+                range_high = max(int(self.game.fc.loc[dfd, 'demand'] + 2 * self.game.fc.loc[dfd, 'stdev']), 0)
                 tk.Label(self.fc_value_frame, text=f'{range_low}...{range_high}').grid(row=i+2, column=3, padx=10, pady=10)
 
         # create and place blank row between values and total
@@ -522,6 +522,7 @@ class GUI():
 
         self.next_image_button.image = self.next_image
         self.next_image_button.grid(row=2, column=0, columnspan=3, pady=10)
+        self.next_image_button.focus_set()
 
 
     def confirm_overbooking(self):
@@ -623,6 +624,7 @@ class GUI():
 
         self.next_image_button.image = self.next_image
         self.next_image_button.grid(row=3, column=0, columnspan=3, pady=10)
+        self.next_image_button.focus_set()
         
 
     def go_to_next_dfd(self):
@@ -631,6 +633,8 @@ class GUI():
             self.dfdsim.select_random_event()
             if self.dfdsim.dfd_event:
                 print(f'applying event {self.dfdsim.dfd_event.name}')
+                # self.rsv_entry['state'] = 'disabled'
+                # self.check_button['state'] = 'disabled'
                 self.display_event_message()
             else:
                 print('no event')
@@ -639,20 +643,25 @@ class GUI():
 
 
     def display_event_message(self):
-        # self.event_message = tk.messagebox.showinfo(title=self.dfdsim.dfd_event.name, message=self.dfdsim.dfd_event.message)
         self.event_box = tk.Toplevel(padx=10, pady=10)
-        self.event_box.grab_set()
-        # self.event_box.title = self.dfdsim.dfd_event.name
+        self.event_box.focus_set()  # focus_set places focus on new top window
+        self.event_box.grab_set()  # grab_set disallows activity in the bottom window
+
+        self.event_image_path = self.dfdsim.dfd_event.image_path
+        self.event_image = ImageTk.PhotoImage(Image.open(self.event_image_path).resize((80,80), resample=5))
+        self.event_image_label = tk.Label(self.event_box, image=self.event_image)
+        self.event_image_label.image = self.event_image
+        self.event_image_label.grid(row=0, column=0, rowspan=3, padx=20, pady=20)
         
         self.event_box_title = tk.Label(self.event_box, text=self.dfdsim.dfd_event.name, font=self.label_font, padx=10, pady=10)
         self.event_box_message = tk.Label(self.event_box, text=self.dfdsim.dfd_event.message, font=self.default_font, wraplengt=300, padx=10, pady=10)
         self.ok_button = tk.Button(self.event_box, text='OK', command=self.dismiss_event_message, padx=10,  pady=5)
 
-        # self.event_box_message.grid(self.event_box, row=0, column=0)
-        # self.ok_button.grid(self.event_box, row=1, column=0)
-        self.event_box_title.pack()
-        self.event_box_message.pack()
-        self.ok_button.pack()
+        self.event_box_title.grid(row=0, column=1)
+        self.event_box_message.grid(row=1, column=1)
+        self.ok_button.grid(row=2, column=1)
+
+        self.ok_button.focus_set()
 
 
     def dismiss_event_message(self):
@@ -705,6 +714,7 @@ class GUI():
                 bg='white', command=next_command)
         self.next_image_button.image = self.next_image
         self.next_image_button.grid(row=2, column=0, columnspan=2, pady=10)
+        self.next_image_button.focus_set()
 
         self.change_bg_to_white(self.left_frame)
         self.change_bg_to_white(self.right_frame)
@@ -734,6 +744,7 @@ class GUI():
                 bg='white', command=self.end_game)
         self.next_image_button.image = self.next_image
         self.next_image_button.grid(row=2, column=0, pady=10)
+        self.next_image_button.focus_set()
 
         self.dep_frame.columnconfigure(0, weight=1)
 

@@ -4,23 +4,25 @@ from event import *
 MF_DOW_LONG = ['Monday','Tuesday','Wednesday','Thursday','Friday']
 MF_DOW_SHORT = ['Mon','Tue','Wed','Thu','Fri']
 
-# EASY_FCDATA = {
-#     'dfd': [4,3,2,1,0],
-#     'dow_long': ['Monday','Tuesday','Wednesday','Thursday','Friday'], 
-#     'dow_short': ['Mon','Tue','Wed','Thu','Fri'], 
-#     'fare':[100,200,300,400,500], 
-#     'demand':[50,40,30,20,10],
-#     'cv':[0,0,0,0,0]
-# }
 EASY_FCDATA = {
-    'dfd': [1,0],
-    'dow_long': MF_DOW_LONG[-2:], 
-    'dow_short': MF_DOW_SHORT[-2:], 
-    'fare':[400,500], 
-    'demand':[20,10],
-    'cv':[0,0]
+    'dfd': [3,2,1,0],
+    'dow_long': MF_DOW_LONG[1:], 
+    'dow_short': MF_DOW_SHORT[1:], 
+    'fare':[100,200,300,400], 
+    'demand':[80,60,40,20],
+    'cv':[0,0,0,0]
 }
-EASY_AC = 50
+EASY_AC = 100
+
+# EASY_FCDATA = {
+#     'dfd': [1,0],
+#     'dow_long': MF_DOW_LONG[-2:], 
+#     'dow_short': MF_DOW_SHORT[-2:], 
+#     'fare':[400,500], 
+#     'demand':[20,10],
+#     'cv':[0,0]
+# }
+# EASY_AC = 50
 
 REAL1_FCDATA = {
     'dfd': [4,3,2,1,0],
@@ -39,20 +41,23 @@ REAL2_FCDATA = {
     'dow_short': MF_DOW_SHORT[-3:], 
     'fare':[400,500,600], 
     'demand':[40,30,20],
-    'cv':[0.001,0.2,0.3]
+    'cv':[0.1,0.2,0.3]
 }
 REAL2_AC = 50
 REAL2_NSRATE = 0.04
 
-DB_LOW = {'costs':[100,250,500,1000,2000,10000], 'weights':[0.3, 0.4, 0.2, 0.07, 0.03, 0.0001]}
-DB_HIGH = {'costs':[100,250,500,1000,2000,10000], 'weights':[0.03, 0.17, 0.45, 0.25, 0.1, 0.01]}
+DB_LOW = {'costs':[100,250,500,1000,2000,5000,10000], 'weights':[0.3, 0.4, 0.2, 0.07, 0.03, 0.01, 0.0001]}
+DB_MEDIUM = {'costs':[100,250,500,1000,2000,5000,10000], 'weights':[0.15, 0.25, 0.35, 0.25, 0.03, 0.02, 0.001]}
+DB_HIGH = {'costs':[100,250,500,1000,2000,5000,10000], 'weights':[0.05, 0.15, 0.25, 0.45, 0.1, 0.05, 0.05]}
 
 scenario_dict = {
     0: {'name':'Easy mode', 'image':'images/100.png', 'fc':EASY_FCDATA, 'ac':EASY_AC},
-    1: {'name':'SFO', 'image':'images/bridge.png', 'fc':REAL1_FCDATA, 'ac':REAL1_AC, 'ns':REAL1_NSRATE, 'db':DB_HIGH,
-        'events':[FareDecrease, FareIncrease, CapacityDecrease, CapacityIncrease] + [None] * 4},
+    1: {'name':'SFO', 'image':'images/bridge.png', 'fc':REAL1_FCDATA, 'ac':REAL1_AC, 'ns':REAL1_NSRATE, 'db':DB_MEDIUM,
+        'events':[FareChange] * 10 + [CapacityChange] * 20 + [Snowstorm] * 1 + [None] * 69},
+        # 'events':[FareChange] * 1 + [Snowstorm] * 10 + [None] * 1},
     2: {'name':'IAH', 'image':'images/oil.png', 'fc':REAL2_FCDATA, 'ac':REAL2_AC, 'ns':REAL2_NSRATE, 'db':DB_LOW,
-        'events':[CapacityDecrease, CapacityDecrease, CapacityDecrease, CapacityDecrease] + [None] * 0},
+        'events':[FareChange] * 20 + [CapacityChange] * 10 + [Snowstorm] * 0 + [None] * 70},
+        # 'events':[CapacityChange, CapacityChange, CapacityChange, CapacityChange] + [None] * 0},
     3: {'name':'NRT', 'image':'images/cherry.png', 'fc':REAL2_FCDATA, 'ac':REAL2_AC, 'ns':REAL2_NSRATE, 'db':DB_LOW},
     4: {'name':'FCO', 'image':'images/fountain.png', 'fc':REAL2_FCDATA, 'ac':REAL2_AC, 'ns':REAL2_NSRATE, 'db':DB_LOW},
     5: {'name':'HNL', 'image':'images/beach.png', 'fc':REAL2_FCDATA, 'ac':REAL2_AC, 'ns':REAL2_NSRATE, 'db':DB_LOW},
@@ -84,4 +89,8 @@ class RealScenario(Scenario):
         self.ns_rate = sc_dict['ns']
         self.db_costs = sc_dict['db']
         self.events = sc_dict['events']
+
+    def update_event_probs(self, selected_event):
+        if selected_event == Snowstorm:
+            pass
         

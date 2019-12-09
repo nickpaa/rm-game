@@ -81,7 +81,7 @@ class DFDSimulation():
     def update_demand(self):
         self.game.fc['a'] = (self.game.fc.loc[:, 'demand'] ** 2) / (self.game.fc.loc[:, 'stdev'] ** 2)
         self.game.fc['scale'] = (self.game.fc.loc[:, 'stdev'] ** 2) / self.game.fc.loc[:, 'demand']
-        self.game.fc['demand'] = gamma.rvs(a=self.game.fc.loc[:, 'a'], scale=self.game.fc.loc[:, 'scale']).astype(int)
+        self.game.fc['demand'] = gamma.rvs(a=self.game.fc.loc[:, 'a'], scale=self.game.fc.loc[:, 'scale']).astype(int).clip(min=2)  # this is numpy clip, so kw is min
         self.game.fc['stdev'] = self.game.fc.loc[:, 'demand'] * self.game.fc.loc[:, 'cv']
 
     def dfd_cleanup(self):
@@ -90,7 +90,7 @@ class DFDSimulation():
         if self.game.curr_dfd >= 0:
             if not self.game.easy_mode:
                 self.update_demand()
-                self.game.fc.loc[:, 'cv'] -= 0.05
+                self.game.fc.loc[:, 'cv'] *= 0.9
             self.game.curr_dow_long = self.game.fc.loc[self.game.curr_dfd, 'dow_long']
             self.game.curr_dow_short = self.game.fc.loc[self.game.curr_dfd, 'dow_short']
 
@@ -113,7 +113,7 @@ if __name__ == '__main__':
     d.dfd_cleanup()
     d.select_random_event()
     if d.random_event: 
-        print(f'applying event {d.dfd_event.name}')
+        print(f'applying event {d.dfd_event.name}, direction {d.dfd_event.direction}')
     else:
         print('no event')
     print(f'dfd {g.curr_dfd}')
@@ -121,7 +121,7 @@ if __name__ == '__main__':
     d.dfd_cleanup()
     d.select_random_event()
     if d.random_event: 
-        print(f'applying event {d.dfd_event.name}')
+        print(f'applying event {d.dfd_event.name}, direction {d.dfd_event.direction}')
     else:
         print('no event')
     print(f'dfd {g.curr_dfd}')
