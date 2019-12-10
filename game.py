@@ -99,9 +99,27 @@ class DFDSimulation():
         self.game.events.remove(self.random_event)
         if self.random_event:
             self.dfd_event = self.random_event(self.game)
+            print(f'applying event {self.dfd_event.name} on booking day {self.game.curr_dow_short}')
             self.dfd_event.apply_event()
         else:
+            print('no event')
             self.dfd_event = None
+
+    def redistribute_event_probs(self, selected_event):
+        # replace chosen event with None
+        self.game.events = [None if x == type(selected_event) else x for x in self.game.events]
+
+        ### special rules
+
+        # if snowstorm happens, no more events
+        if type(selected_event) == Snowstorm:
+            print('Selected event is Snowstorm')
+            print(f'New event list: {self.game.events}')
+            self.game.events = [None] * 100
+
+        # circus only affects leisure demand, so remove circus after dfd 2
+        if self.game.curr_dfd == 1:
+            self.game.events = [None if x == Circus else x for x in self.game.events]
 
 
 if __name__ == '__main__':

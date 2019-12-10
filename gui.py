@@ -632,12 +632,10 @@ class GUI():
         if not self.game.easy_mode:
             self.dfdsim.select_random_event()
             if self.dfdsim.dfd_event:
-                print(f'applying event {self.dfdsim.dfd_event.name}')
                 # self.rsv_entry['state'] = 'disabled'
                 # self.check_button['state'] = 'disabled'
                 self.display_event_message()
-            else:
-                print('no event')
+                self.dfdsim.redistribute_event_probs(self.dfdsim.dfd_event)
         self.main.destroy()
         self.build_game()
 
