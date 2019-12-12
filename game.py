@@ -89,7 +89,12 @@ class DFDSimulation():
         self.game.curr_dfd -= 1
         if self.game.curr_dfd >= 0:
             if not self.game.easy_mode:
-                self.update_demand()
+                self.select_random_event()
+                if self.dfd_event:
+                    # self.display_event_message()
+                    self.redistribute_event_probs(self.dfd_event)
+                else:
+                    self.update_demand()
                 self.game.fc.loc[:, 'cv'] *= 0.9
             self.game.curr_dow_long = self.game.fc.loc[self.game.curr_dfd, 'dow_long']
             self.game.curr_dow_short = self.game.fc.loc[self.game.curr_dfd, 'dow_short']
@@ -102,6 +107,26 @@ class DFDSimulation():
             self.dfd_event.apply_event()
         else:
             self.dfd_event = None
+
+    def redistribute_event_probs(self, selected_event):
+        # replace chosen event with None
+        self.game.events = [None if x == type(selected_event) else x for x in self.game.events]
+
+        ### special rules
+
+        # if snowstorm or volcano happens, no more events except maybe NoSnowstorm or NoVolcano or NoHurricane
+        if type(selected_event) == Snowstorm:
+            self.game.events = [NoSnowstorm] * 25 + [None] * 75
+
+        if type(selected_event) == Volcano:
+            self.game.events = [NoVolcano] * 25 + [None] * 75
+
+        if type(selected_event) == Hurricane:
+            self.game.events = [NoHurricane] * 75 + [None] * 25
+
+        # carnival only affects leisure demand, so remove carnival after dfd 2
+        if self.game.curr_dfd == 1:
+            self.game.events = [None if x == Carnival else x for x in self.game.events]
 
 
 if __name__ == '__main__':
