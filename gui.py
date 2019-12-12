@@ -12,6 +12,7 @@ from config import DB_PATH
 from db import GameDB
 from game import DFDSimulation, EasyGame, RealGame
 from scenario import EasyScenario, RealScenario, scenario_dict
+from config import logger
 
 
 class GUI():
@@ -172,6 +173,13 @@ class GUI():
         if (self.player_name_value.get() != '') and (self.player_loc_value.get() != ''):
             self.home.destroy()
             self.game = EasyGame(EasyScenario(scenario_dict[0]))
+
+            logger.info('******************************')
+            logger.info(f'New game {self.game.game_type}')
+            logger.info(f'--------- Game start --------')
+            self.log_dfd_header
+            self.log_current_stats()
+
             self.skip_ob = True
             self.game.set_player_info(self.player_name_value.get(), self.player_loc_value.get())
             self.build_game()
@@ -183,6 +191,13 @@ class GUI():
         if (self.player_name_value.get() != '') and (self.player_loc_value.get() != ''):
             self.home.destroy()
             self.game = RealGame(RealScenario(scenario_dict[which_game]))
+            
+            logger.info('******************************')
+            logger.info(f'New game {self.game.game_type}')
+            logger.info(f'--------- Game start --------')
+            self.log_dfd_header
+            self.log_current_stats()
+            
             self.skip_ob = False
             self.game.set_player_info(self.player_name_value.get(), self.player_loc_value.get())
             self.build_game()
@@ -489,20 +504,24 @@ class GUI():
 
     def validate_overbooking(self, event=None):
         try:
-            ob = int(self.ob_value.get())
+            self.game.over_au = int(self.ob_value.get())
         except ValueError:
             tk.messagebox.showerror(title='Error', message=f'Oberbooking value must be an integer >= 0.')
         
-        if ob >= 0:
+        if self.game.over_au >= 0:
             self.apply_overbooking()
         else:
             tk.messagebox.showerror(title='Error', message=f'Oberbooking value must be an integer >= 0.')
 
 
     def apply_overbooking(self, event=None):
-        self.game.au = self.game.ac + int(self.ob_entry.get())
+        self.game.au = self.game.ac + self.game.over_au
         self.game.sa = self.game.au
         self.skip_ob = True
+
+        # logger.info(f'OB: {self.game.over_au}')
+        self.log_ob_entry()
+        self.log_current_stats(incl_fc=False)
 
         self.ob_entry.unbind('<Return>', self.ob_entry_funcid)
         self.ob_entry['state'] = 'disabled'
@@ -563,7 +582,7 @@ class GUI():
 
     def validate_reserve(self, event=None):
         try:
-            rsv = int(self.rsv_value.get())
+            self.dfdsim.rsv = int(self.rsv_value.get())
         except ValueError:
             if self.game.sa > 0:
                 tk.messagebox.showerror(title='Error', message=f'Reserve value must be an integer between 0 and {self.game.sa}.')
@@ -571,33 +590,37 @@ class GUI():
                 tk.messagebox.showerror(title='Error', message=f'You have already sold the authorized number of seats, so you must reserve 0 seats.')
 
         if (self.game.sa > 0):
-            if (rsv >= 0) and (rsv <= self.game.sa):
+            if (self.dfdsim.rsv >= 0) and (self.dfdsim.rsv <= self.game.sa):
                 self.run_dfd()
             else:
                 tk.messagebox.showerror(title='Error', message=f'Reserve value must be an integer between 0 and {self.game.sa}.')    
         else:
-            if rsv == 0:
+            if self.dfdsim.rsv == 0:
                 self.run_dfd()
             else:
                 tk.messagebox.showerror(title='Error', message=f'You have already sold the authorized number of seats, so you must reserve 0 seats.')
 
 
     def run_dfd(self, event=None):
-        self.rsv = int(self.rsv_entry.get())
+        # self.rsv = int(self.rsv_entry.get())
+
+        self.log_rsv_entry()
 
         self.rsv_entry.unbind('<Return>', self.rsv_entry_funcid)
         self.rsv_entry['state'] = 'disabled'
         self.check_button.unbind('Button-1>', self.check_button_funcid)
         self.check_button['state'] = 'disabled'
         
-        self.dfdsim.observe_bookings(self.rsv)
+        self.dfdsim.observe_bookings(self.dfdsim.rsv)
+        
+        self.log_dfdsim_outcome()
 
-        rsv_s = (lambda x: '' if x == 1 else 's') (self.rsv)
+        rsv_s = (lambda x: '' if x == 1 else 's') (self.dfdsim.rsv)
         lb_s = (lambda x: '' if x == 1 else 's') (self.dfdsim.lb)
         lb_people = (lambda x: 'person' if x == 1 else 'people') (self.dfdsim.lb)
         
         self.outcome_label = tk.Label(self.rsv_frame, 
-            text=f'{self.dfdsim.arr} {lb_people} wanted to book today, and you reserved {self.rsv} seat{rsv_s}. \nYou sold {self.dfdsim.lb} seat{lb_s} and earned ${self.dfdsim.rev:,}.', 
+            text=f'{self.dfdsim.arr} {lb_people} wanted to book today, and you reserved {self.dfdsim.rsv} seat{rsv_s}. \nYou sold {self.dfdsim.lb} seat{lb_s} and earned ${self.dfdsim.rev:,}.', 
             padx=5, pady=5, bg='lightblue', wraplengt=300)
         self.outcome_label.grid(row=1, column=0, columnspan=3, padx=5, pady=10, sticky='E W')
 
@@ -628,14 +651,22 @@ class GUI():
         
 
     def go_to_next_dfd(self):
+        # go_to_next_dfd prepares game for next dfd by:
+        # deleting the past dfd row from the forecast
+        # selecting a random event and applying it
+        # displaying a message about the event
+        # redistributing probabilities if an event was selected
+
         self.dfdsim.dfd_cleanup()
+        
+        self.log_dfd_header()
         if not self.game.easy_mode:
-            self.dfdsim.select_random_event()
+            self.log_event()
+        self.log_current_stats()
+
+        if not self.game.easy_mode:
             if self.dfdsim.dfd_event:
-                # self.rsv_entry['state'] = 'disabled'
-                # self.check_button['state'] = 'disabled'
                 self.display_event_message()
-                self.dfdsim.redistribute_event_probs(self.dfdsim.dfd_event)
         self.main.destroy()
         self.build_game()
 
@@ -686,6 +717,8 @@ class GUI():
         self.game.total_lb -= self.game.noshows
         self.game.dbs = max(0, self.game.total_lb - self.game.ac)
 
+        self.log_ns_db()
+
         self.dep_image_path = 'images/departure.png'
         self.dep_image = ImageTk.PhotoImage(Image.open(self.dep_image_path).resize((120,120), resample=5))
         self.dep_image_label = tk.Label(self.dep_frame, image=self.dep_image, bg='white')
@@ -724,6 +757,9 @@ class GUI():
         self.game.total_db_cost = self.game.db_cost * self.game.dbs
         self.game.total_rev -= self.game.total_db_cost
 
+        self.log_db_cost()
+        self.log_current_stats()
+
         if self.game.db_cost <= 250:
             self.db_comp_msg = f'You got lucky. There were plenty of other options, and you only paid ${self.game.db_cost:,} per denied boarding.'
         elif self.game.db_cost <= 1000:
@@ -748,6 +784,9 @@ class GUI():
 
 
     def end_game(self):
+        logger.info('---------- Game end ----------')
+        logger.info('******************************')
+
         self.add_results_to_db()
         self.build_end()
 
@@ -786,6 +825,9 @@ class GUI():
         if self.game.curr_dfd >= 0:
             go_home = tk.messagebox.askyesno('Main menu?', 'Return to the main menu? Your progress will be lost.')
             if go_home:
+                logger.info('------- Quitting game --------')
+                logger.info('')
+                logger.info('******************************')
                 self.main.destroy()
                 self.build_home()
         else:
@@ -979,3 +1021,36 @@ class GUI():
     def change_bg_to_lightblue(self, parent):
         for widget in parent.winfo_children():
             widget.configure(bg='lightblue')
+
+
+    def log_dfd_header(self):
+        logger.info(f'---------- DFD {self.game.curr_dfd} ----------')
+
+    def log_current_stats(self, incl_fc=True):
+        logger.info(f'AC: {self.game.ac}, AU: {self.game.au}, LB: {self.game.total_lb}, SA: {self.game.sa}, Rev: {self.game.total_rev}')
+        if incl_fc:
+            logger.info(f'Fare: {self.game.fc["fare"].to_dict()}')
+            logger.info(f'Demand: {self.game.fc["demand"].to_dict()}')
+            logger.info(f'CV: {self.game.fc["cv"].to_dict()}')
+            logger.info(f'Stdev: {self.game.fc["stdev"].to_dict()}')
+
+    def log_ob_entry(self):
+        logger.info(f'OB: {self.game.over_au}')
+
+    def log_rsv_entry(self):
+        logger.info(f'RSV: {self.dfdsim.rsv}')
+
+    def log_dfdsim_outcome(self):
+        logger.info(f'Arr: {self.dfdsim.arr}, LB+: {self.dfdsim.lb}, Rev+: {self.dfdsim.rev}')
+    
+    def log_event(self):
+        if self.dfdsim.dfd_event:
+            logger.info(f'Event: {self.dfdsim.dfd_event.name}')
+        else:
+            logger.info('No event')
+
+    def log_ns_db(self):
+        logger.info(f'NS: {self.game.noshows}, DB: {self.game.dbs}')
+
+    def log_db_cost(self):
+        logger.info(f'DB cost: {self.game.db_cost}')

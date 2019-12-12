@@ -1,5 +1,5 @@
 from pandas import DataFrame
-from event import *
+from event import Hurricane, NoHurricane, Snowstorm, NoSnowstorm, Volcano, NoVolcano, FareChange, CapacityChange, Economy, Concert, Carnival, Sportsball
 
 MF_DOW_LONG = ['Monday','Tuesday','Wednesday','Thursday','Friday']
 MF_DOW_SHORT = ['Mon','Tue','Wed','Thu','Fri']
@@ -53,9 +53,9 @@ DB_HIGH = {'costs':[100,250,500,1000,2000,5000,10000], 'weights':[0.05, 0.15, 0.
 scenario_dict = {
     0: {'name':'Easy mode', 'image':'images/100.png', 'fc':EASY_FCDATA, 'ac':EASY_AC},
     1: {'name':'SFO', 'image':'images/bridge.png', 'fc':REAL1_FCDATA, 'ac':REAL1_AC, 'ns':REAL1_NSRATE, 'db':DB_MEDIUM,
-        'events':[FareChange] * 15 + [CapacityChange] * 10 + [Economy] * 20 + [Sportsball] * 15 + [None] * 40},
+        'events':[FareChange] * 15 + [CapacityChange] * 10 + [Economy] * 20 + [Sportsball] * 15 + [Snowstorm] * 5 + [None] * 35},
     2: {'name':'IAH', 'image':'images/oil.png', 'fc':REAL2_FCDATA, 'ac':REAL2_AC, 'ns':REAL2_NSRATE, 'db':DB_LOW,
-        'events':[FareChange] * 20 + [CapacityChange] * 10 + [Circus] * 10 + [Snowstorm] * 5 + [None] * 55},
+        'events':[FareChange] * 20 + [CapacityChange] * 20 + [Carnival] * 10 + [Concert] * 10 + [Hurricane] * 5 + [None] * 35},
     3: {'name':'NRT', 'image':'images/cherry.png', 'fc':REAL2_FCDATA, 'ac':REAL2_AC, 'ns':REAL2_NSRATE, 'db':DB_LOW},
     4: {'name':'FCO', 'image':'images/fountain.png', 'fc':REAL2_FCDATA, 'ac':REAL2_AC, 'ns':REAL2_NSRATE, 'db':DB_LOW},
     5: {'name':'HNL', 'image':'images/beach.png', 'fc':REAL2_FCDATA, 'ac':REAL2_AC, 'ns':REAL2_NSRATE, 'db':DB_LOW},
