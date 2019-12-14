@@ -42,6 +42,8 @@ class RealGame(Game):
         Game.__init__(self, scenario)
         self.easy_mode = False
         self.ns_rate = scenario.ns_rate
+        self.noshows = 0
+        self.dbs = 0
         self.db_costs = scenario.db_costs
         self.events = scenario.events
 
@@ -49,6 +51,10 @@ class RealGame(Game):
         return binom.rvs(n=self.total_lb, p=self.ns_rate)
 
     def compensate_dbs(self):
+        # if db count is very high, make it more likely to pay high amount
+        if self.dbs >= 10:
+            self.db_costs[:3] *= 0.5
+            self.db_costs[3:] *= 2
         return choices(self.db_costs['costs'], weights=self.db_costs['weights'])[0]
 
 

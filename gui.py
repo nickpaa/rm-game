@@ -31,7 +31,6 @@ class GUI():
         self.entry_font.configure(family='Helvetica', size='12')
         self.header_font = Font(family='Helvetica', size='14', weight='bold')
         self.label_font = Font(family='Helvetica', size='12', weight='bold')
-        # self.root.option_add('*Dialog.msg.font', 'Helvetica 18')
 
         self.game_db = GameDB(DB_PATH)
 
@@ -115,7 +114,6 @@ class GUI():
     def build_real_button_frame(self):
         self.button_frame.rowconfigure((0,1), weight=1)
 
-        # real_mode_button_frame = tk.Frame(self.button_frame, bg='white', relief='groove', borderwidth=5)
         real_mode_button_frame = tk.Frame(self.button_frame, bg='white')
         real_mode_button_frame.grid(row=1, column=0, columnspan=2, sticky='S E W')
         real_mode_button_frame.grid_rowconfigure((0,1), weight=1)
@@ -174,10 +172,8 @@ class GUI():
             self.home.destroy()
             self.game = EasyGame(EasyScenario(scenario_dict[0]))
 
-            logger.info('******************************')
-            logger.info(f'New game {self.game.game_type}')
-            logger.info(f'--------- Game start --------')
-            self.log_dfd_header
+            self.log_start()
+            self.log_dfd_header()
             self.log_current_stats()
 
             self.skip_ob = True
@@ -399,6 +395,8 @@ class GUI():
                 self.rev_value = tk.Label(self.rev_frame, text=f'${self.game.total_rev:,}')
         self.rev_label.grid(row=0, column=0, sticky='W')
         self.rev_value.grid(row=0, column=1, sticky='E')
+        
+        # if end, print final stats
         if (which == 'end') and not self.game.easy_mode:
             # DB cost
             self.db_cost_label = tk.Label(self.rev_frame, text=f'DB cost:', font=self.label_font)
@@ -408,7 +406,8 @@ class GUI():
                 self.db_cost_value = tk.Label(self.rev_frame, text=f'$0')
             self.db_cost_label.grid(row=1, column=0, sticky='W')
             self.db_cost_value.grid(row=1, column=1, sticky='E')
-            # Final rev
+            
+            # final rev
             self.final_rev_label = tk.Label(self.rev_frame, text=f'Final revenue:', font=self.label_font)
             self.final_rev_value = tk.Label(self.rev_frame, text=f'${self.game.total_rev:,}')
             self.final_rev_label.grid(row=2, column=0, sticky='W')
@@ -482,9 +481,9 @@ class GUI():
         self.ob_frame.rowconfigure((0,1,2), weight=1)
         self.ob_frame.columnconfigure((0,1,2), weight=1)
 
-        ob_msg = f'We know that, on average, {int(self.game.ns_rate * 100)}% of customers will not show up for the flight, so we might overbook. How many seats would you like to overbook by?'
+        self.ob_msg = f'We know that, on average, {int(self.game.ns_rate * 100)}% of customers will not show up for the flight, so we might overbook. How many seats would you like to overbook by?'
         
-        self.ob_label = tk.Label(self.ob_frame, text=ob_msg, wraplengt=300)
+        self.ob_label = tk.Label(self.ob_frame, text=self.ob_msg, wraplengt=300)
         self.ob_label.grid(row=0, column=0, padx=5, pady=10)
 
         self.ob_value = tk.StringVar()
@@ -503,6 +502,7 @@ class GUI():
 
 
     def validate_overbooking(self, event=None):
+        # OB value should be non-negative integer
         try:
             self.game.over_au = int(self.ob_value.get())
         except ValueError:
@@ -519,7 +519,6 @@ class GUI():
         self.game.sa = self.game.au
         self.skip_ob = True
 
-        # logger.info(f'OB: {self.game.over_au}')
         self.log_ob_entry()
         self.log_current_stats(incl_fc=False)
 
@@ -556,11 +555,11 @@ class GUI():
         self.rsv_frame.columnconfigure((0,1,2), weight=1)
 
         if self.game.curr_dfd > 0:
-            rsv_msg = f'How many seats would you like to reserve today at ${self.game.fc.loc[self.game.curr_dfd, "fare"]}?'
+            self.rsv_msg = f'How many seats would you like to reserve today at ${self.game.fc.loc[self.game.curr_dfd, "fare"]}?'
         else:
-            rsv_msg = f'The flight departs today, so you should reserve all remaining seats at ${self.game.fc.loc[self.game.curr_dfd, "fare"]}.'
+            self.rsv_msg = f'The flight departs today, so you should reserve all remaining seats at ${self.game.fc.loc[self.game.curr_dfd, "fare"]}.'
 
-        self.rsv_label = tk.Label(self.rsv_frame, text=rsv_msg, wraplengt=300)
+        self.rsv_label = tk.Label(self.rsv_frame, text=self.rsv_msg, wraplengt=300)
         self.rsv_label.grid(row=0, column=0, padx=5, pady=10)
 
         self.rsv_value = tk.StringVar()
@@ -602,8 +601,6 @@ class GUI():
 
 
     def run_dfd(self, event=None):
-        # self.rsv = int(self.rsv_entry.get())
-
         self.log_rsv_entry()
 
         self.rsv_entry.unbind('<Return>', self.rsv_entry_funcid)
@@ -784,8 +781,7 @@ class GUI():
 
 
     def end_game(self):
-        logger.info('---------- Game end ----------')
-        logger.info('******************************')
+        self.log_end()
 
         self.add_results_to_db()
         self.build_end()
@@ -825,9 +821,7 @@ class GUI():
         if self.game.curr_dfd >= 0:
             go_home = tk.messagebox.askyesno('Main menu?', 'Return to the main menu? Your progress will be lost.')
             if go_home:
-                logger.info('------- Quitting game --------')
-                logger.info('')
-                logger.info('******************************')
+                self.log_quit_game()
                 self.main.destroy()
                 self.build_home()
         else:
@@ -1023,6 +1017,13 @@ class GUI():
             widget.configure(bg='lightblue')
 
 
+    ### LOGGING
+
+    def log_start(self):
+        logger.info('******************************')
+        logger.info(f'New game {self.game.game_type}')
+        logger.info(f'--------- Game start --------')
+
     def log_dfd_header(self):
         logger.info(f'---------- DFD {self.game.curr_dfd} ----------')
 
@@ -1054,3 +1055,12 @@ class GUI():
 
     def log_db_cost(self):
         logger.info(f'DB cost: {self.game.db_cost}')
+
+    def log_end(self):
+        logger.info('---------- Game end ----------')
+        logger.info('******************************')
+
+    def log_quit_game(self):
+        logger.info('------- Quitting game --------')
+        logger.info('')
+        logger.info('******************************')
